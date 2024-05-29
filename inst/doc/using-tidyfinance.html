@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Using the tidyfinance package</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Using the <code>tidyfinance</code>
+package</h1>
+
+
+
+<p><code>tidyfinance</code> is an R package <a href="https://CRAN.R-project.org/package=tidyfinance">on CRAN</a> that
+contains a set of helper functions for empirical research in financial
+economics, addressing a variety of topics covered in <a href="https://www.tidy-finance.org/r/">Tidy Finance with R</a> (TFWR).
+We designed the package to provide easy shortcuts for the applications
+that we discuss in the book. If you want to inspect the details of the
+package or propose new features, feel free to visit the package
+repository on <a href="https://github.com/tidy-finance/r-tidyfinance">Github</a>.</p>
+<p>In this vignette, we demonstrate the features of the initial release.
+We decided to focus on functions that allow you to download the data
+that we use in TFWR.</p>
+<div id="install-the-package" class="section level2">
+<h2>Install the package</h2>
+<p>You can install the released version of <code>tidyfinance</code> from
+CRAN via:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;tidyfinance&quot;</span>)</span></code></pre></div>
+<p>You can install the development version of tidyfinance from GitHub
+using the <code>pak</code> package:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">&quot;tidy-finance/r-tidyfinance&quot;</span>)</span></code></pre></div>
+</div>
+<div id="download-data" class="section level2">
+<h2>Download data</h2>
+<p>Let’s start by loading the package</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(tidyfinance)</span></code></pre></div>
+<p>The main function is
+<code>download_data(type, start_date, end_date)</code> with supported
+type:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">list_supported_types</span>()</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 32 × 3</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;    type                  dataset_name                        domain     </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                 &lt;chr&gt;                               &lt;chr&gt;      </span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;  1 factors_q5_daily      q5_factors_daily_2022.csv           Global Q   </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;  2 factors_q5_weekly     q5_factors_weekly_2022.csv          Global Q   </span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  3 factors_q5_weekly_w2w q5_factors_weekly_w2w_2022.csv      Global Q   </span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;  4 factors_q5_monthly    q5_factors_monthly_2022.csv         Global Q   </span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  5 factors_q5_quarterly  q5_factors_quarterly_2022.csv       Global Q   </span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  6 factors_q5_annual     q5_factors_annual_2022.csv          Global Q   </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  7 factors_ff3_daily     Fama/French 3 Factors [Daily]       Fama-French</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  8 factors_ff3_weekly    Fama/French 3 Factors [Weekly]      Fama-French</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  9 factors_ff3_monthly   Fama/French 3 Factors               Fama-French</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 10 factors_ff5_daily     Fama/French 5 Factors (2x3) [Daily] Fama-French</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code></pre></div>
+<p>So, for instance, if you want to download monthly Fama-French
+Three-Factor data, you can call:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_ff3_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 5</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;    date       risk_free mkt_excess     smb     hml</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-01    0.0013    -0.0011 -0.0311 -0.0625</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-02-01    0.0012    -0.0813  0.0107 -0.0381</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-03-01    0.0013    -0.134  -0.0483 -0.139 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-04-01    0          0.136   0.0245 -0.0133</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-05-01    0.0001     0.0558  0.0247 -0.0488</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-06-01    0.0001     0.0246  0.0269 -0.022 </span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-07-01    0.0001     0.0577 -0.0233 -0.0141</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-08-01    0.0001     0.0763 -0.0022 -0.0297</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-09-01    0.0001    -0.0363  0.0002 -0.0271</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-10-01    0.0001    -0.021   0.0438  0.0425</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 11 2020-11-01    0.0001     0.125   0.058   0.0209</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 12 2020-12-01    0.0001     0.0463  0.0489 -0.0151</span></span></code></pre></div>
+<p>Under the hood, the function uses the <code>frenchdata</code> package
+(see its documentation <a href="https://CRAN.R-project.org/package=frenchdata">here</a>) and
+applies some cleaning steps, as in TFWR. If you haven’t installed
+<code>frenchdata</code> yet, you’ll get prompted to install it first
+before you can download this specific data type.</p>
+<p>You can also access q-Factor data in this way, by calling:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_q5_daily&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 253 × 7</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;    date       risk_free mkt_excess       me        ia       roe        eg</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-02  0.000055   0.00863  -0.0112  -0.00171   0.000684  0.00341 </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-01-03  0.000055  -0.00673   0.00234 -0.00193  -0.00155   0.000683</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-01-06  0.000055   0.00360  -0.00360 -0.00409  -0.00478   0.000611</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-01-07  0.000055  -0.00192  -0.00139 -0.00322  -0.00512  -0.00274 </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-01-08  0.000055   0.00467  -0.00108 -0.00121   0.00456   0.00614 </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-01-09  0.000055   0.00649  -0.00684 -0.000639  0.00294   0.00526 </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-01-10  0.000055  -0.00335  -0.00236 -0.00206   0.000405  0.00341 </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-01-13  0.000055   0.00729  -0.00209  0.00195   0.00320   0.000936</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-01-14  0.000055  -0.000559  0.00475 -0.00108  -0.00994  -0.00721 </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-01-15  0.000055   0.00164   0.00304 -0.00266  -0.00109   0.00114 </span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 243 more rows</span></span></code></pre></div>
+<p>To ensure that we can extend the functionality of the download
+functions for specific types, we also provide domain-specific download
+functions. The <code>download_data(&quot;factors_ff3_monthly&quot;)</code>
+actually calls
+<code>download_data_factors(&quot;factors_ff3_monthly&quot;)</code>, which in turn
+calls <code>download_data_factors_ff(&quot;factors_ff3_monthly&quot;)</code>. Why
+did we decide to have these nested function approach?</p>
+<p>Suppose that the q-Factor data changes its URL path and our original
+function does not work anymore. In this case, you can replace the
+default <code>url</code> value in
+<code>download_data_factors_q(type, start_date, end_date, url)</code> to
+apply the usual cleaning steps.</p>
+<p>This feature becomes more apparent for other data sources such as
+<code>wrds_crsp_monthly</code>. Note that you need to have valid WRDS
+credentials and need to set them correctly (check
+<code>?set_wrds_connection()</code> and <a href="https://www.tidy-finance.org/r/wrds-crsp-and-compustat">WRDS,
+CRSP, and Compustat</a> in TFWR). If you want to download the standard
+monthly CRSP data, you can call:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;wrds_crsp_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span></code></pre></div>
+<p>If you want to add further columns, you can add them via
+<code>...</code> to <code>download_data_wrds_crsp()</code>, for
+instance:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">download_data_wrds_crsp</span>(<span class="st">&quot;wrds_crsp_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, mthvol)</span></code></pre></div>
+<p>Note that the function downloads CRSP v2 as default, as we do in our
+book since February 2024. If you want to download the old version of
+CRSP before the update, you can use the <code>version = v1</code>
+parameter in <code>download_data_wrds_crsp()</code> .</p>
+<p>As another example, you can do the same for Compustat:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">download_data_wrds_compustat</span>(<span class="st">&quot;wrds_compustat_annual&quot;</span>, <span class="st">&quot;2000-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, acoxar, amc, aldo)</span></code></pre></div>
+<p>Check out the list of supported types and the corresponding download
+functions for more information on the respective customization options.
+We decided to provide limited functionality for the initial release on
+purpose and rather respond to community request than overengineer the
+package from the start.</p>
+</div>
+<div id="browse-content-from-tfwr" class="section level2">
+<h2>Browse content from TFWR</h2>
+<p>We include functions to check out content from TFWR in your browser.
+If you want to list all available R chapters, simply call the following
+function:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">list_tidy_finance_chapters</span>()</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;setting-up-your-environment&quot;                </span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt;  [2] &quot;introduction-to-tidy-finance&quot;               </span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt;  [3] &quot;accessing-and-managing-financial-data&quot;      </span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;wrds-crsp-and-compustat&quot;                    </span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;trace-and-fisd&quot;                             </span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt;  [6] &quot;other-data-providers&quot;                       </span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;beta-estimation&quot;                            </span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt;  [8] &quot;univariate-portfolio-sorts&quot;                 </span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;size-sorts-and-p-hacking&quot;                   </span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; [10] &quot;value-and-bivariate-sorts&quot;                  </span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; [11] &quot;replicating-fama-and-french-factors&quot;        </span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; [12] &quot;fama-macbeth-regressions&quot;                   </span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; [13] &quot;fixed-effects-and-clustered-standard-errors&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; [14] &quot;difference-in-differences&quot;                  </span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; [15] &quot;factor-selection-via-machine-learning&quot;      </span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; [16] &quot;option-pricing-via-machine-learning&quot;        </span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; [17] &quot;parametric-portfolio-policies&quot;              </span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; [18] &quot;constrained-optimization-and-backtesting&quot;   </span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; [19] &quot;wrds-dummy-data&quot;                            </span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; [20] &quot;cover-and-logo-design&quot;                      </span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; [21] &quot;clean-enhanced-trace-with-r&quot;                </span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; [22] &quot;proofs&quot;                                     </span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; [23] &quot;hex-sticker&quot;                                </span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="co">#&gt; [24] &quot;changelog&quot;</span></span></code></pre></div>
+<p>The function returns a character vector containing the names of the
+chapters available in TFWR. If you want to look at a specific chapter,
+you can call:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">open_tidy_finance_website</span>(<span class="st">&quot;beta-estimation&quot;</span>)</span></code></pre></div>
+<p>This opens either the specific chapter you requested or the main
+index page in your default web browser.</p>
+</div>
+<div id="regression-helpers" class="section level2">
+<h2>Regression helpers</h2>
+<p>We discuss winsorization in TFWR, so we figured providing this
+function could be useful:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="fu">arrange</span>(x)</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x_winsorized =</span> <span class="fu">winsorize</span>(x, <span class="fl">0.01</span>))</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 2</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;        x x_winsorized</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;  1 -2.31        -1.97</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;  2 -1.97        -1.97</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt;  3 -1.69        -1.69</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;  4 -1.55        -1.55</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;  5 -1.27        -1.27</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt;  6 -1.27        -1.27</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt;  7 -1.22        -1.22</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt;  8 -1.14        -1.14</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt;  9 -1.12        -1.12</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt; 10 -1.07        -1.07</span></span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt; # ℹ 90 more rows</span></span></code></pre></div>
+<p>If you rather want to replace the bottom and top quantiles of your
+distribution with missing values, then you can use
+<code>trim()</code></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x_trimmed =</span> <span class="fu">trim</span>(x, <span class="fl">0.01</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 2</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;        x x_trimmed</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt;  1 -2.31     NA   </span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt;  2 -1.97     -1.97</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt;  3 -1.69     -1.69</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;  4 -1.55     -1.55</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt;  5 -1.27     -1.27</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt;  6 -1.27     -1.27</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt;  7 -1.22     -1.22</span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt;  8 -1.14     -1.14</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt;  9 -1.12     -1.12</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co">#&gt; 10 -1.07     -1.07</span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 90 more rows</span></span></code></pre></div>
+<p>We also discuss the importance of providing summary statistics of
+your data, so there is also a function for that:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">create_summary_statistics</span>(data, x, <span class="at">detail =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 15</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co">#&gt;   variable     n   mean    sd   min   q01   q05   q10    q25    q50   q75   q90</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co">#&gt; 1 x          100 0.0904 0.913 -2.31 -1.97 -1.27 -1.07 -0.494 0.0618 0.692  1.26</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co">#&gt; # ℹ 3 more variables: q95 &lt;dbl&gt;, q99 &lt;dbl&gt;, max &lt;dbl&gt;</span></span></code></pre></div>
+</div>
+<div id="experimental-functions" class="section level2">
+<h2>Experimental functions</h2>
+<p>We have two more experimental functions in the sense that it is
+unclear in which direction they might evolve. First you can assign
+portfolios based on a sorting variable using
+<code>assign_portfolio()</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">exchange =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;NYSE&quot;</span>, <span class="st">&quot;NASDAQ&quot;</span>), <span class="dv">100</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="at">market_cap =</span> <span class="fu">runif</span>(<span class="dv">100</span>, <span class="fl">1e6</span>, <span class="fl">1e9</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>    <span class="at">portfolio =</span> <span class="fu">assign_portfolio</span>(</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>      <span class="fu">pick</span>(<span class="fu">everything</span>()), <span class="st">&quot;market_cap&quot;</span>, <span class="at">n_portfolios =</span> <span class="dv">5</span>, <span class="at">exchanges =</span> <span class="fu">c</span>(<span class="st">&quot;NYSE&quot;</span>))</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  )</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 4</span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;       id exchange market_cap portfolio</span></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;     &lt;int&gt;</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="co">#&gt;  1     1 NASDAQ   784790691.         4</span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt;  2     2 NASDAQ    10420475.         1</span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co">#&gt;  3     3 NASDAQ   779286817.         4</span></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co">#&gt;  4     4 NYSE     729661261.         4</span></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="co">#&gt;  5     5 NASDAQ   630501721.         3</span></span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="co">#&gt;  6     6 NASDAQ   481429919.         3</span></span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="co">#&gt;  7     7 NASDAQ   157480215.         1</span></span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt;  8     8 NYSE       9207304.         1</span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;  9     9 NASDAQ   453005936.         3</span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt; 10    10 NASDAQ   492801035.         3</span></span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt; # ℹ 90 more rows</span></span></code></pre></div>
+<p>Second, you can estimate the coefficients of a linear model specified
+by one or more independent variable using
+<code>estimate_model()</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">ret_excess =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>),</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">mkt_excess =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>  <span class="at">smb =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>),</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="at">hml =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>)</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="fu">estimate_model</span>(data, <span class="st">&quot;ret_excess ~ mkt_excess + smb + hml&quot;</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt;    mkt_excess         smb       hml</span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt; 1 -0.03986975 -0.02872439 0.0207145</span></span></code></pre></div>
+</div>
+<div id="concluding-remarks" class="section level2">
+<h2>Concluding remarks</h2>
+<p>We are curious to learn in which direction we should extend the
+package, so please consider opening an issue in the <a href="https://github.com/tidy-finance/r-tidyfinance/issues">package
+repository</a>. For instance, we could support more data sources, add
+more parameters to the <code>download_*</code> family of functions, or
+we could put more emphasis on the generality of portfolio assignment or
+other modeling functions.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
