@@ -1,7 +1,7 @@
 Package: tidyfinance
 Type: Package
 Title: Tidy Finance Helper Functions
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person(given = "Christoph", 
            family = "Scheuch", 
@@ -39,10 +39,10 @@ Config/testthat/edition: 3
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-05-29 19:56:51 UTC; krise
+Packaged: 2024-07-03 09:07:20 UTC; krise
 Author: Christoph Scheuch [aut, cre] (<https://orcid.org/0009-0004-0423-6819>),
   Stefan Voigt [aut] (<https://orcid.org/0000-0001-5619-3161>),
   Patrick Weiss [aut] (<https://orcid.org/0000-0002-9282-5872>)
 Maintainer: Christoph Scheuch <christoph.scheuch@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-05-29 20:20:02 UTC
+Date/Publication: 2024-07-03 09:50:02 UTC

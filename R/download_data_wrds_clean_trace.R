@@ -5,8 +5,7 @@
 #' The trade data is cleaned as suggested by Dick-Nielsen (2009, 2014).
 #'
 #' @param cusips A character vector specifying the 9-digit CUSIPs to download.
-#' @param start_date The start date for filtering the data, in "YYYY-MM-DD"
-#'   format.
+#' @param start_date The start date for filtering the data, in "YYYY-MM-DD" format.
 #' @param end_date The end date for filtering the data, in "YYYY-MM-DD" format.
 #'
 #' @return A data frame containing the cleaned trade messages from TRACE for the
@@ -34,8 +33,10 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
   trace_enhanced_db <- tbl(con, in_schema("trace", "trace_enhanced"))
 
   trace_all <- trace_enhanced_db |>
-    filter(cusip_id %in% cusips) |>
-    filter(trd_exctn_dt >= start_date & trd_exctn_dt <= end_date) |>
+    filter(
+      cusip_id %in% cusips,
+      between(trd_exctn_dt, start_date, end_date)
+    ) |>
     select(cusip_id, msg_seq_nb, orig_msg_seq_nb,
            entrd_vol_qt, rptd_pr, yld_pt, rpt_side_cd, cntra_mp_id,
            trd_exctn_dt, trd_exctn_tm, trd_rpt_dt, trd_rpt_tm,

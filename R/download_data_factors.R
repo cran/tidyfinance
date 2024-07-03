@@ -27,10 +27,10 @@ download_data_factors <- function(type, start_date, end_date) {
 
   check_supported_type(type)
 
-  if (grepl("factors_ff", type)) {
+  if (grepl("factors_ff", type, fixed = TRUE)) {
     processed_data <- download_data_factors_ff(type, start_date, end_date)
   }
-  if (grepl("factors_q", type)) {
+  if (grepl("factors_q", type, fixed = TRUE)) {
     processed_data <- download_data_factors_q(type, start_date, end_date)
   }
 
@@ -74,13 +74,16 @@ download_data_factors_ff <- function(type, start_date, end_date) {
 
   download_french_data <- getNamespace("frenchdata")$download_french_data
 
+  start_date <- as.Date(start_date)
+  end_date <- as.Date(end_date)
+
   factors_ff_types <- list_supported_types_ff()
   dataset <- factors_ff_types$dataset_name[factors_ff_types$type == type]
 
   raw_data <- suppressMessages(download_french_data(dataset))
   raw_data <- raw_data$subsets$data[[1]]
 
-  if (grepl("monthly", type)) {
+  if (grepl("monthly", type, fixed = TRUE)) {
     processed_data <- raw_data |>
       mutate(date = lubridate::floor_date(lubridate::ymd(paste0(date, "01")), "month"))
   } else {
@@ -91,12 +94,12 @@ download_data_factors_ff <- function(type, start_date, end_date) {
   processed_data <- processed_data |>
     mutate(
       across(-date, ~na_if(.,-99.99)),
-      across(-date, ~ . / 100),
+      across(-date, ~ . / 100)
     ) |>
     rename_with(tolower) |>
-    filter(date >= start_date & date <= end_date)
+    filter(between(date, start_date, end_date))
 
-  processed_data <- if (grepl("industry", type)) {
+  processed_data <- if (grepl("industry", type, fixed = TRUE)) {
     processed_data |>
       select(date, everything())
   } else {
@@ -143,26 +146,28 @@ download_data_factors_q <- function(
 ) {
 
   check_supported_type(type)
+  start_date <- as.Date(start_date)
+  end_date <- as.Date(end_date)
 
   factors_q_types <- list_supported_types_q()
   dataset <- factors_q_types$dataset_name[factors_q_types$type == type]
   raw_data <- suppressMessages(utils::read.csv(paste0(url, dataset)) |> as_tibble())
 
-  if (grepl("monthly", type)) {
+  if (grepl("monthly", type, fixed = TRUE)) {
     processed_data <- raw_data |>
       mutate(date = lubridate::ymd(paste(year, month, "01", sep = "-"))) |>
       select(-c(year, month))
   }
-  if (grepl("daily", type)) {
+  if (grepl("daily", type, fixed = TRUE)) {
     processed_data <- raw_data |>
       mutate(DATE = lubridate::ymd(DATE))
   }
 
   processed_data <- processed_data |>
-    rename_with(~sub("R_", "", .)) |>
-    rename_with(~tolower(.)) |>
+    rename_with(~sub("R_", "", ., fixed = TRUE)) |>
+    rename_with(tolower) |>
     mutate(across(-date, ~. / 100)) |>
-    filter(date >= start_date & date <= end_date) |>
+    filter(between(date, start_date, end_date)) |>
     select(date, risk_free = f, mkt_excess = mkt, everything())
 
   processed_data
