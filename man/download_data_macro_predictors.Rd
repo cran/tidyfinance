@@ -15,9 +15,11 @@ download_data_macro_predictors(
 \item{type}{The type of dataset to download ("macro_predictors_monthly",
 "macro_predictors_quarterly", "macro_predictors_annual").}
 
-\item{start_date}{The start date for filtering the data, in "YYYY-MM-DD" format.}
+\item{start_date}{Optional. A character string or Date object in "YYYY-MM-DD" format
+specifying the start date for the data. If not provided, the full dataset is returned.}
 
-\item{end_date}{The end date for filtering the data, in "YYYY-MM-DD" format.}
+\item{end_date}{Optional. A character string or Date object in "YYYY-MM-DD" format
+specifying the end date for the data. If not provided, the full dataset is returned.}
 
 \item{url}{The URL from which to download the dataset, with a default Google
 Sheets export link.}
@@ -36,7 +38,6 @@ financial metrics and filtering by the specified date range.
 }
 \examples{
 \donttest{
-  download_data_macro_predictors("macro_predictors_monthly", "2000-01-01", "2020-12-31")
+  macro_predictors_monthly <- download_data_macro_predictors("macro_predictors_monthly")
 }
-
 }

@@ -17,7 +17,7 @@ library(tidyfinance)
 list_supported_types()
 
 ## -----------------------------------------------------------------------------
-download_data("factors_ff3_monthly", "2020-01-01", "2020-12-31")
+download_data("factors_ff_3_monthly", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
 download_data("factors_q5_daily", "2020-01-01", "2020-12-31")
@@ -26,10 +26,10 @@ download_data("factors_q5_daily", "2020-01-01", "2020-12-31")
 #  download_data("wrds_crsp_monthly", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
-#  download_data_wrds_crsp("wrds_crsp_monthly", "2020-01-01", "2020-12-31", mthvol)
+#  download_data_wrds_crsp("wrds_crsp_monthly", "2020-01-01", "2020-12-31", additional_columns = "mthvol")
 
 ## -----------------------------------------------------------------------------
-#  download_data_wrds_compustat("wrds_compustat_annual", "2000-01-01", "2020-12-31", acoxar, amc, aldo)
+#  download_data_wrds_compustat("wrds_compustat_annual", "2000-01-01", "2020-12-31", additional_columns = c("acoxar", "amc", "aldo"))
 
 ## -----------------------------------------------------------------------------
 list_tidy_finance_chapters()
@@ -38,18 +38,17 @@ list_tidy_finance_chapters()
 #  open_tidy_finance_website("beta-estimation")
 
 ## -----------------------------------------------------------------------------
-library(tibble)
 library(dplyr)
 
 set.seed(123)
-data <- tibble(x = rnorm(100)) |> 
+data <- tibble(x = rnorm(100)) |>
   arrange(x)
 
-data |> 
+data |>
   mutate(x_winsorized = winsorize(x, 0.01))
 
 ## -----------------------------------------------------------------------------
-data |> 
+data |>
   mutate(x_trimmed = trim(x, 0.01))
 
 ## -----------------------------------------------------------------------------
@@ -62,10 +61,10 @@ data <- tibble(
   market_cap = runif(100, 1e6, 1e9)
 )
 
-data |> 
+data |>
   mutate(
     portfolio = assign_portfolio(
-      pick(everything()), "market_cap", n_portfolios = 5, exchanges = c("NYSE"))
+      pick(everything()), "market_cap", n_portfolios = 5, exchanges = "NYSE")
   )
 
 ## -----------------------------------------------------------------------------

@@ -9,35 +9,35 @@
 #'
 #' @param type The type of dataset to download ("macro_predictors_monthly",
 #'   "macro_predictors_quarterly", "macro_predictors_annual").
-#' @param start_date The start date for filtering the data, in "YYYY-MM-DD" format.
-#' @param end_date The end date for filtering the data, in "YYYY-MM-DD" format.
+#' @param start_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the start date for the data. If not provided, the full dataset is returned.
+#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the end date for the data. If not provided, the full dataset is returned.
 #' @param url The URL from which to download the dataset, with a default Google
 #'   Sheets export link.
 #'
-#' @return A tibble with processed data, filtered by the specified date range
+#' @returns A tibble with processed data, filtered by the specified date range
 #'   and including financial metrics.
 #'
+#' @export
 #' @examples
 #' \donttest{
-#'   download_data_macro_predictors("macro_predictors_monthly", "2000-01-01", "2020-12-31")
+#'   macro_predictors_monthly <- download_data_macro_predictors("macro_predictors_monthly")
 #' }
-#'
-#' @import dplyr
-#' @importFrom tidyr drop_na
-#' @importFrom lubridate ym
-#' @importFrom utils download.file
-#'
-#' @export
-download_data_macro_predictors <- function(type, start_date, end_date, url = "https://docs.google.com/spreadsheets/d/1g4LOaRj4TvwJr9RIaA_nwrXXWTOy46bP") {
+download_data_macro_predictors <- function(
+    type, start_date, end_date, url = "https://docs.google.com/spreadsheets/d/1g4LOaRj4TvwJr9RIaA_nwrXXWTOy46bP"
+  ) {
 
   check_supported_type(type)
 
   check_if_package_installed("readxl", type)
 
-  read_xlsx <- getNamespace("readxl")$read_xlsx
-
-  start_date <- as.Date(start_date)
-  end_date <- as.Date(end_date)
+  if (missing(start_date) || missing(end_date)) {
+    message("No start_date or end_date provided. Returning the full data set.")
+  } else {
+    start_date <- as.Date(start_date)
+    end_date <- as.Date(end_date)
+  }
 
   temporary_file <- tempfile()
   on.exit(unlink(temporary_file), add = TRUE)
@@ -50,12 +50,12 @@ download_data_macro_predictors <- function(type, start_date, end_date, url = "ht
   )
 
   if (grepl("monthly", type, fixed = TRUE)) {
-    raw_data <- suppressMessages(read_xlsx(temporary_file, sheet = "Monthly"))
+    raw_data <- suppressMessages(readxl::read_xlsx(temporary_file, sheet = "Monthly"))
     processed_data <- raw_data |>
-      mutate(date = lubridate::ym(yyyymm))
+      mutate(date = ym(yyyymm))
   }
   if (grepl("quarterly", type, fixed = TRUE)) {
-    raw_data <- suppressMessages(read_xlsx(temporary_file, sheet = "Quarterly"))
+    raw_data <- suppressMessages(readxl::read_xlsx(temporary_file, sheet = "Quarterly"))
     processed_data <- raw_data |>
       mutate(
         year = substr(yyyyq, 1, 4),
@@ -65,7 +65,7 @@ download_data_macro_predictors <- function(type, start_date, end_date, url = "ht
       )
   }
   if (grepl("annual", type, fixed = TRUE)) {
-    raw_data <- suppressMessages(read_xlsx(temporary_file, sheet = "Annual"))
+    raw_data <- suppressMessages(readxl::read_xlsx(temporary_file, sheet = "Annual"))
     processed_data <- raw_data |>
       mutate(date = as.Date(paste0(yyyy, "-01-01")))
   }
@@ -88,8 +88,12 @@ download_data_macro_predictors <- function(type, start_date, end_date, url = "ht
     select(date, rp_div, dp, dy, ep, de, svar, bm = `b/m`, ntis, tbl, lty, ltr,
            tms, dfy, infl
     ) |>
-    filter(between(date, start_date, end_date)) |>
     tidyr::drop_na()
+
+  if (!missing(start_date) && !missing(end_date)) {
+    processed_data <- processed_data |>
+      filter(between(date, start_date, end_date))
+  }
 
   processed_data
 }

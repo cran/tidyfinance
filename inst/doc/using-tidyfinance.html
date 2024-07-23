@@ -368,38 +368,38 @@ using the <code>pak</code> package:</p>
 <code>download_data(type, start_date, end_date)</code> with supported
 type:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">list_supported_types</span>()</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 32 × 3</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;    type                  dataset_name                        domain     </span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                 &lt;chr&gt;                               &lt;chr&gt;      </span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;  1 factors_q5_daily      q5_factors_daily_2022.csv           Global Q   </span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;  2 factors_q5_weekly     q5_factors_weekly_2022.csv          Global Q   </span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  3 factors_q5_weekly_w2w q5_factors_weekly_w2w_2022.csv      Global Q   </span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;  4 factors_q5_monthly    q5_factors_monthly_2022.csv         Global Q   </span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  5 factors_q5_quarterly  q5_factors_quarterly_2022.csv       Global Q   </span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  6 factors_q5_annual     q5_factors_annual_2022.csv          Global Q   </span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  7 factors_ff3_daily     Fama/French 3 Factors [Daily]       Fama-French</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  8 factors_ff3_weekly    Fama/French 3 Factors [Weekly]      Fama-French</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  9 factors_ff3_monthly   Fama/French 3 Factors               Fama-French</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 10 factors_ff5_daily     Fama/French 5 Factors (2x3) [Daily] Fama-French</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 314 × 3</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;    type                     dataset_name                   domain     </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                    &lt;chr&gt;                          &lt;chr&gt;      </span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;  1 factors_q5_daily         q5_factors_daily_2022.csv      Global Q   </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;  2 factors_q5_weekly        q5_factors_weekly_2022.csv     Global Q   </span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  3 factors_q5_weekly_w2w    q5_factors_weekly_w2w_2022.csv Global Q   </span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;  4 factors_q5_monthly       q5_factors_monthly_2022.csv    Global Q   </span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  5 factors_q5_quarterly     q5_factors_quarterly_2022.csv  Global Q   </span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  6 factors_q5_annual        q5_factors_annual_2022.csv     Global Q   </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  7 factors_ff_3_monthly     Fama/French 3 Factors          Fama-French</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  8 factors_ff_3_weekly      Fama/French 3 Factors [Weekly] Fama-French</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  9 factors_ff_3_daily       Fama/French 3 Factors [Daily]  Fama-French</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 10 factors_ff_5_2x3_monthly Fama/French 5 Factors (2x3)    Fama-French</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 304 more rows</span></span></code></pre></div>
 <p>So, for instance, if you want to download monthly Fama-French
 Three-Factor data, you can call:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_ff3_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 5</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;    date       risk_free mkt_excess     smb     hml</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-01    0.0013    -0.0011 -0.0311 -0.0625</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-02-01    0.0012    -0.0813  0.0107 -0.0381</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-03-01    0.0013    -0.134  -0.0483 -0.139 </span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-04-01    0          0.136   0.0245 -0.0133</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-05-01    0.0001     0.0558  0.0247 -0.0488</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-06-01    0.0001     0.0246  0.0269 -0.022 </span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-07-01    0.0001     0.0577 -0.0233 -0.0141</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-08-01    0.0001     0.0763 -0.0022 -0.0297</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-09-01    0.0001    -0.0363  0.0002 -0.0271</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-10-01    0.0001    -0.021   0.0438  0.0425</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 11 2020-11-01    0.0001     0.125   0.058   0.0209</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 12 2020-12-01    0.0001     0.0463  0.0489 -0.0151</span></span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-01    -0.0011 -0.0311 -0.0625    0.0013</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-02-01    -0.0813  0.0107 -0.0381    0.0012</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-03-01    -0.134  -0.0483 -0.139     0.0013</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-04-01     0.136   0.0245 -0.0133    0     </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-05-01     0.0558  0.0247 -0.0488    0.0001</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-06-01     0.0246  0.0269 -0.022     0.0001</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-07-01     0.0577 -0.0233 -0.0141    0.0001</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-08-01     0.0763 -0.0022 -0.0297    0.0001</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-09-01    -0.0363  0.0002 -0.0271    0.0001</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-10-01    -0.021   0.0438  0.0425    0.0001</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 11 2020-11-01     0.125   0.058   0.0209    0.0001</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 12 2020-12-01     0.0463  0.0489 -0.0151    0.0001</span></span></code></pre></div>
 <p>Under the hood, the function uses the <code>frenchdata</code> package
 (see its documentation <a href="https://CRAN.R-project.org/package=frenchdata">here</a>) and
 applies some cleaning steps, as in TFWR. If you haven’t installed
@@ -423,11 +423,12 @@ before you can download this specific data type.</p>
 <span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 243 more rows</span></span></code></pre></div>
 <p>To ensure that we can extend the functionality of the download
 functions for specific types, we also provide domain-specific download
-functions. The <code>download_data(&quot;factors_ff3_monthly&quot;)</code>
+functions. The <code>download_data(&quot;factors_ff_3_monthly&quot;)</code>
 actually calls
-<code>download_data_factors(&quot;factors_ff3_monthly&quot;)</code>, which in turn
-calls <code>download_data_factors_ff(&quot;factors_ff3_monthly&quot;)</code>. Why
-did we decide to have these nested function approach?</p>
+<code>download_data_factors(&quot;factors_ff_3_monthly&quot;)</code>, which in
+turn calls
+<code>download_data_factors_ff(&quot;factors_ff_3_monthly&quot;)</code>. Why did
+we decide to have these nested function approach?</p>
 <p>Suppose that the q-Factor data changes its URL path and our original
 function does not work anymore. In this case, you can replace the
 default <code>url</code> value in
@@ -441,15 +442,15 @@ CRSP, and Compustat</a> in TFWR). If you want to download the standard
 monthly CRSP data, you can call:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;wrds_crsp_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span></code></pre></div>
 <p>If you want to add further columns, you can add them via
-<code>...</code> to <code>download_data_wrds_crsp()</code>, for
-instance:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">download_data_wrds_crsp</span>(<span class="st">&quot;wrds_crsp_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, mthvol)</span></code></pre></div>
+<code>additional_columns</code> to
+<code>download_data_wrds_crsp()</code>, for instance:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">download_data_wrds_crsp</span>(<span class="st">&quot;wrds_crsp_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, <span class="at">additional_columns =</span> <span class="st">&quot;mthvol&quot;</span>)</span></code></pre></div>
 <p>Note that the function downloads CRSP v2 as default, as we do in our
 book since February 2024. If you want to download the old version of
 CRSP before the update, you can use the <code>version = v1</code>
 parameter in <code>download_data_wrds_crsp()</code> .</p>
 <p>As another example, you can do the same for Compustat:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">download_data_wrds_compustat</span>(<span class="st">&quot;wrds_compustat_annual&quot;</span>, <span class="st">&quot;2000-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, acoxar, amc, aldo)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">download_data_wrds_compustat</span>(<span class="st">&quot;wrds_compustat_annual&quot;</span>, <span class="st">&quot;2000-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>, <span class="at">additional_columns =</span> <span class="fu">c</span>(<span class="st">&quot;acoxar&quot;</span>, <span class="st">&quot;amc&quot;</span>, <span class="st">&quot;aldo&quot;</span>))</span></code></pre></div>
 <p>Check out the list of supported types and the corresponding download
 functions for more information on the respective customization options.
 We decided to provide limited functionality for the initial release on
@@ -497,33 +498,32 @@ index page in your default web browser.</p>
 <h2>Regression helpers</h2>
 <p>We discuss winsorization in TFWR, so we figured providing this
 function could be useful:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="fu">arrange</span>(x)</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x_winsorized =</span> <span class="fu">winsorize</span>(x, <span class="fl">0.01</span>))</span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 2</span></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;        x x_winsorized</span></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt;        &lt;dbl&gt;</span></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;  1 -2.31        -1.97</span></span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;  2 -1.97        -1.97</span></span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt;  3 -1.69        -1.69</span></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;  4 -1.55        -1.55</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;  5 -1.27        -1.27</span></span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt;  6 -1.27        -1.27</span></span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt;  7 -1.22        -1.22</span></span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt;  8 -1.14        -1.14</span></span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt;  9 -1.12        -1.12</span></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt; 10 -1.07        -1.07</span></span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt; # ℹ 90 more rows</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="fu">arrange</span>(x)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x_winsorized =</span> <span class="fu">winsorize</span>(x, <span class="fl">0.01</span>))</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 2</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;        x x_winsorized</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;  1 -2.31        -1.97</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;  2 -1.97        -1.97</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;  3 -1.69        -1.69</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt;  4 -1.55        -1.55</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;  5 -1.27        -1.27</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;  6 -1.27        -1.27</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt;  7 -1.22        -1.22</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt;  8 -1.14        -1.14</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt;  9 -1.12        -1.12</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; 10 -1.07        -1.07</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt; # ℹ 90 more rows</span></span></code></pre></div>
 <p>If you rather want to replace the bottom and top quantiles of your
 distribution with missing values, then you can use
 <code>trim()</code></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x_trimmed =</span> <span class="fu">trim</span>(x, <span class="fl">0.01</span>))</span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 2</span></span>
 <span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;        x x_trimmed</span></span>
@@ -560,10 +560,10 @@ portfolios based on a sorting variable using
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="at">market_cap =</span> <span class="fu">runif</span>(<span class="dv">100</span>, <span class="fl">1e6</span>, <span class="fl">1e9</span>)</span>
 <span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>)</span>
 <span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>data <span class="sc">|&gt;</span> </span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
 <span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>    <span class="at">portfolio =</span> <span class="fu">assign_portfolio</span>(</span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>      <span class="fu">pick</span>(<span class="fu">everything</span>()), <span class="st">&quot;market_cap&quot;</span>, <span class="at">n_portfolios =</span> <span class="dv">5</span>, <span class="at">exchanges =</span> <span class="fu">c</span>(<span class="st">&quot;NYSE&quot;</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>      <span class="fu">pick</span>(<span class="fu">everything</span>()), <span class="st">&quot;market_cap&quot;</span>, <span class="at">n_portfolios =</span> <span class="dv">5</span>, <span class="at">exchanges =</span> <span class="st">&quot;NYSE&quot;</span>)</span>
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  )</span>
 <span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt; # A tibble: 100 × 4</span></span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;       id exchange market_cap portfolio</span></span>

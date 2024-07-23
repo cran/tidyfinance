@@ -9,29 +9,28 @@
 #' `fisd_mergedissue` table after joining it with issuer information from the
 #' `fisd_mergedissuer` table for issuers domiciled in the USA.
 #'
-#' @return A data frame containing a subset of FISD data with fields related to
+#' @param additional_columns Additional columns from the FISD table
+#'   as a character vector.
+#'
+#' @returns A data frame containing a subset of FISD data with fields related to
 #'   the bond's characteristics and issuer information. This includes complete
-#'   CUSIP, maturity, offering amount, offering date, dated date, interest
+#'   CUSIP, maturity date, offering amount, offering date, dated date, interest
 #'   frequency, coupon, last interest date, issue ID, issuer ID, SIC code of the
 #'   issuer.
 #'
+#' @export
 #' @examples
 #' \donttest{
 #'   fisd <- download_data_wrds_fisd()
+#'   fisd_extended <- download_data_wrds_fisd(additional_columns = c("asset_backed", "defeased"))
 #' }
-#'
-#' @import dplyr
-#'
-#' @export
-download_data_wrds_fisd <- function() {
+download_data_wrds_fisd <- function(additional_columns = NULL) {
 
   check_if_package_installed("dbplyr", "fisd_mergedissue")
 
-  in_schema <- getNamespace("dbplyr")$in_schema
-
   con <- get_wrds_connection()
 
-  fisd_mergedissue_db <- tbl(con, in_schema("fisd", "fisd_mergedissue"))
+  fisd_mergedissue_db <- tbl(con, I("fisd.fisd_mergedissue"))
 
   fisd <- fisd_mergedissue_db |>
     filter(
@@ -50,7 +49,7 @@ download_data_wrds_fisd <- function() {
       coupon_type %in% c("F", "Z"),
       is.na(fix_frequency),
       coupon_change_indicator == "N",
-      interest_frequency %in% c("0", "1","2", "4", "12"),
+      interest_frequency %in% c("0", "1", "2", "4", "12"),
       rule_144a == "N",
       private_placement == "N" | is.na(private_placement),
       defaulted == "N",
@@ -65,16 +64,13 @@ download_data_wrds_fisd <- function() {
       preferred_security == "N" | is.na(preferred_security)
     ) |>
     select(
-      complete_cusip, maturity,
-      offering_amt, offering_date,
-      dated_date,
-      interest_frequency, coupon,
-      last_interest_date,
-      issue_id, issuer_id
+      complete_cusip, maturity, offering_amt, offering_date, dated_date,
+      interest_frequency, coupon, last_interest_date, issue_id, issuer_id,
+      all_of(additional_columns)
     ) |>
     collect()
 
-  fisd_mergedissuer_db <- tbl(con, in_schema("fisd", "fisd_mergedissuer"))
+  fisd_mergedissuer_db <- tbl(con, I("fisd.fisd_mergedissuer"))
 
   fisd_issuer <- fisd_mergedissuer_db |>
     filter(country_domicile == "USA") |>

@@ -5,32 +5,44 @@
 #' The trade data is cleaned as suggested by Dick-Nielsen (2009, 2014).
 #'
 #' @param cusips A character vector specifying the 9-digit CUSIPs to download.
-#' @param start_date The start date for filtering the data, in "YYYY-MM-DD" format.
-#' @param end_date The end date for filtering the data, in "YYYY-MM-DD" format.
+#' @param start_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the start date for the data. If not provided, a subset of the dataset is returned.
+#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the end date for the data. If not provided, a subset of the dataset is returned.
 #'
-#' @return A data frame containing the cleaned trade messages from TRACE for the
+#' @returns A data frame containing the cleaned trade messages from TRACE for the
 #'   selected CUSIPs over the time window specified. Output variables include
 #'   identifying information (i.e., CUSIP, trade date/time) and trade-specific
 #'   information (i.e., price/yield, volume, counterparty, and reporting side).
 #'
+#' @export
 #' @examples
 #' \donttest{
-#'   one_bond <- download_data_wrds_clean_trace("00101JAH9", "2019-01-01", "2021-12-31")
+#'   clean_trace <- download_data_wrds_clean_trace("00101JAH9", "2019-01-01", "2021-12-31")
 #' }
-#'
-#' @import dplyr
-#' @importFrom lubridate as_datetime
-#'
-#' @export
-download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
+download_data_wrds_clean_trace <- function(
+    cusips, start_date, end_date
+  ) {
 
   check_if_package_installed("dbplyr", "clean_trace")
 
-  in_schema <- getNamespace("dbplyr")$in_schema
+  if (missing(cusips)) {
+    stop("Error: No cusip provided. Please provide at least one cusip.")
+  }
+
+  if (missing(start_date) || missing(end_date)) {
+    start_date <- Sys.Date() %m-% years(2)
+    end_date <- Sys.Date() %m-% years(1)
+    message("No start_date or end_date provided. Using the range ",
+            start_date, " to ", end_date, " to avoid downloading large amounts of data.")
+  } else {
+    start_date <- as.Date(start_date)
+    end_date <- as.Date(end_date)
+  }
 
   con <- get_wrds_connection()
 
-  trace_enhanced_db <- tbl(con, in_schema("trace", "trace_enhanced"))
+  trace_enhanced_db <- tbl(con, I("trace.trace_enhanced"))
 
   trace_all <- trace_enhanced_db |>
     filter(
@@ -74,9 +86,9 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
   ## the msg_seq_nb of the main message
   trace_post <- trace_post_TR |>
     anti_join(trace_post_Y,
-              by = c("cusip_id", "msg_seq_nb" = "orig_msg_seq_nb",
-                     "entrd_vol_qt", "rptd_pr", "rpt_side_cd",
-                     "cntra_mp_id", "trd_exctn_dt", "trd_exctn_tm"))
+              by = join_by(cusip_id, msg_seq_nb == orig_msg_seq_nb,
+                           entrd_vol_qt, rptd_pr, rpt_side_cd,
+                           cntra_mp_id, trd_exctn_dt, trd_exctn_tm))
 
 
   # Enhanced TRACE: Pre 06-02-2012 ------------------------------------------
@@ -92,9 +104,9 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
     filter(trc_st == "T",
            trd_rpt_dt < as.Date("2012-02-06")) |>
     anti_join(trace_pre_C,
-              by = c("cusip_id", "msg_seq_nb" = "orig_msg_seq_nb",
-                     "entrd_vol_qt", "rptd_pr", "rpt_side_cd",
-                     "cntra_mp_id", "trd_exctn_dt", "trd_exctn_tm"))
+              by = join_by(cusip_id, msg_seq_nb == orig_msg_seq_nb,
+                           entrd_vol_qt, rptd_pr, rpt_side_cd,
+                           cntra_mp_id, trd_exctn_dt, trd_exctn_tm))
 
   # Corrections (trc_st = W) - W can also correct a previous W
   trace_pre_W <- trace_all |>
@@ -111,20 +123,20 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
     # Corrections that correct some msg
     trace_pre_W_correcting <- trace_pre_W |>
       semi_join(trace_pre_T,
-                by = c("cusip_id", "trd_exctn_dt",
-                       "orig_msg_seq_nb" = "msg_seq_nb"))
+                by = join_by(cusip_id, trd_exctn_dt,
+                             orig_msg_seq_nb == msg_seq_nb))
 
     # Corrections that do not correct some msg
     trace_pre_W <- trace_pre_W |>
       anti_join(trace_pre_T,
-                by = c("cusip_id", "trd_exctn_dt",
-                       "orig_msg_seq_nb" = "msg_seq_nb"))
+                by = join_by(cusip_id, trd_exctn_dt,
+                             orig_msg_seq_nb == msg_seq_nb))
 
     # Delete msgs that are corrected and add correction msgs
     trace_pre_T <- trace_pre_T |>
       anti_join(trace_pre_W_correcting,
-                by = c("cusip_id", "trd_exctn_dt",
-                       "msg_seq_nb" = "orig_msg_seq_nb")) |>
+                by = join_by(cusip_id, trd_exctn_dt,
+                             msg_seq_nb == orig_msg_seq_nb)) |>
       union_all(trace_pre_W_correcting)
 
     # Escape if no corrections remain or they cannot be matched
@@ -160,8 +172,8 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
     mutate(seq = row_number()) |>
     ungroup() |>
     anti_join(trace_pre_R,
-              by = c("cusip_id", "trd_exctn_dt", "entrd_vol_qt",
-                     "rptd_pr", "rpt_side_cd", "cntra_mp_id", "seq")) |>
+              by = join_by(cusip_id, trd_exctn_dt, entrd_vol_qt,
+                           rptd_pr, rpt_side_cd, cntra_mp_id, seq)) |>
     select(-seq)
 
 
@@ -181,8 +193,8 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
     filter(cntra_mp_id == "D",
            rpt_side_cd == "B") |>
     anti_join(trace_agency_sells,
-              by = c("cusip_id", "trd_exctn_dt",
-                     "entrd_vol_qt", "rptd_pr"))
+              by = join_by(cusip_id, trd_exctn_dt,
+                           entrd_vol_qt, rptd_pr))
 
   # Agency clean
   trace_clean <- trace_clean |>
@@ -207,7 +219,7 @@ download_data_wrds_clean_trace <- function(cusips, start_date, end_date) {
     arrange(cusip_id, trd_exctn_dt, trd_exctn_tm) |>
     select(cusip_id, trd_exctn_dt, trd_exctn_tm,
            rptd_pr, entrd_vol_qt, yld_pt, rpt_side_cd, cntra_mp_id) |>
-    mutate(trd_exctn_tm = format(lubridate::as_datetime(trd_exctn_tm, tz = "America/New_York"), "%H:%M:%S"))
+    mutate(trd_exctn_tm = format(as_datetime(trd_exctn_tm, tz = "America/New_York"), "%H:%M:%S"))
 
   trace_final
 }

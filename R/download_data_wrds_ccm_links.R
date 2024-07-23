@@ -14,31 +14,24 @@
 #' @param usedflag An integer indicating whether to use flagged links. The
 #'   default is `1`, indicating that only flagged links should be used.
 #'
-#' @return A data frame with the columns `permno`, `gvkey`, `linkdt`, and
+#' @returns A data frame with the columns `permno`, `gvkey`, `linkdt`, and
 #'   `linkenddt`, where `linkenddt` is the end date of the link, and missing end
 #'   dates are replaced with today's date.
 #'
+#' @export
 #' @examples
 #' \donttest{
 #'   ccm_links <- download_data_wrds_ccm_links(linktype = "LU", linkprim = "P", usedflag = 1)
 #' }
-#'
-#' @import dplyr
-#' @importFrom tidyr replace_na
-#' @importFrom lubridate today
-#'
-#' @export
 download_data_wrds_ccm_links <- function(
     linktype = c("LU", "LC"), linkprim = c("P", "C"), usedflag = 1
 ) {
 
   check_if_package_installed("dbplyr", "wrds_ccm_links")
 
-  in_schema <- getNamespace("dbplyr")$in_schema
-
   con <- get_wrds_connection()
 
-  ccmxpf_linktable_db <- tbl(con, in_schema("crsp", "ccmxpf_linktable"))
+  ccmxpf_linktable_db <- tbl(con, I("crsp.ccmxpf_linktable"))
 
   ccm_links <- ccmxpf_linktable_db |>
     filter(linktype %in% local(linktype) &
@@ -46,7 +39,7 @@ download_data_wrds_ccm_links <- function(
              usedflag == local(usedflag)) |>
     select(permno = lpermno, gvkey, linkdt, linkenddt) |>
     collect() |>
-    mutate(linkenddt = tidyr::replace_na(linkenddt, lubridate::today()))
+    mutate(linkenddt = tidyr::replace_na(linkenddt, today()))
 
   disconnection_connection(con)
 

@@ -6,19 +6,6 @@
 #' groups specified by the `by` argument. Additional detail levels for quantiles
 #' can be included.
 #'
-#' @param data A data frame containing the variables to be summarized.
-#' @param ... Comma-separated list of unquoted variable names in the data frame
-#'   to summarize. These variables must be either numeric, integer, or logical.
-#' @param by An optional unquoted variable name to group the data before
-#'   summarizing. If NULL (the default), summary statistics are computed across
-#'   all observations.
-#' @param detail A logical flag indicating whether to compute detailed summary
-#'   statistics including additional quantiles. Defaults to FALSE, which
-#'   computes basic statistics (n, mean, sd, min, median, max). When TRUE,
-#'   additional quantiles (1%, 5%, 10%, 25%, 75%, 90%, 95%, 99%) are computed.
-#' @param drop_na A logical flag indicating whether to drop missing values for
-#'   each variabl (default is FALSE).
-#'
 #' @details The function first checks that all specified variables are of type
 #' numeric, integer, or logical. If any variables do not meet this criterion,
 #' the function stops and returns an error message indicating the non-conforming
@@ -33,14 +20,23 @@
 #' `by` variable is provided, statistics are computed within each level of the
 #' `by` variable.
 #'
-#' @return A tibble with summary statistics for each selected variable. If `by`
+#' @param data A data frame containing the variables to be summarized.
+#' @param ... Comma-separated list of unquoted variable names in the data frame
+#'   to summarize. These variables must be either numeric, integer, or logical.
+#' @param by An optional unquoted variable name to group the data before
+#'   summarizing. If `NULL` (the default), summary statistics are computed across
+#'   all observations.
+#' @param detail A logical flag indicating whether to compute detailed summary
+#'   statistics including additional quantiles. Defaults to FALSE, which
+#'   computes basic statistics (n, mean, sd, min, median, max). When TRUE,
+#'   additional quantiles (1%, 5%, 10%, 25%, 75%, 90%, 95%, 99%) are computed.
+#' @param drop_na A logical flag indicating whether to drop missing values for
+#'   each variabl (default is FALSE).
+#'
+#' @returns A tibble with summary statistics for each selected variable. If `by`
 #'   is specified, the output includes the grouping variable as well. Each row
 #'   represents a variable (and a group if `by` is used), and columns include
 #'   the computed statistics.
-#'
-#' @import dplyr
-#' @import tidyr
-#' @importFrom purrr partial
 #'
 #' @export
 create_summary_statistics <- function(
@@ -60,7 +56,7 @@ create_summary_statistics <- function(
   # Determine set of summary statistics to compute
   if (!detail) {
     funs <- list(
-      n = function(x) {sum(!is.na(x))},
+      n = function(x) sum(!is.na(x)),
       mean = mean, sd = stats::sd,
       min = min,
       q50 = partial(quantile_na_handler, probs = 0.50),
@@ -68,7 +64,7 @@ create_summary_statistics <- function(
     )
   } else {
     funs <- list(
-      n = function(x) {sum(!is.na(x))},
+      n = function(x) sum(!is.na(x)),
       mean = mean, sd = stats::sd,
       min = min,
       q01 = partial(quantile_na_handler, probs = 0.01),
@@ -119,6 +115,6 @@ quantile_na_handler <- function(x, probs) {
   if (anyNA(x)) {
     NA_real_
   } else {
-    unname(stats::quantile(x, probs = probs))
+    unname(quantile(x, probs = probs))
   }
 }

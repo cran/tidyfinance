@@ -7,8 +7,10 @@
 #'
 #' @param type A string specifying the type of CRSP data to download:
 #'   "crsp_monthly" or "crsp_daily".
-#' @param start_date The start date for the data retrieval in "YYYY-MM-DD" format.
-#' @param end_date The end date for the data retrieval in "YYYY-MM-DD" format.
+#' @param start_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the start date for the data. If not provided, a subset of the dataset is returned.
+#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD" format
+#'   specifying the end date for the data. If not provided, a subset of the dataset is returned.
 #' @param batch_size An optional integer specifying the batch size for
 #'   processing daily data, with a default of 500.
 #' @param version An optional character specifying which CRSP version to use.
@@ -17,11 +19,12 @@
 #' @param additional_columns Additional columns from the CRSP monthly or
 #'   daily data as a character vector.
 #'
-#' @return A data frame containing CRSP stock returns, adjusted for delistings,
+#' @returns A data frame containing CRSP stock returns, adjusted for delistings,
 #'   along with calculated market capitalization and excess returns over the
 #'   risk-free rate. The structure of the returned data frame depends on the
 #'   selected data type.
 #'
+#' @export
 #' @examples
 #' \donttest{
 #'   crsp_monthly <- download_data_wrds_crsp("wrds_crsp_monthly", "2020-11-01", "2020-12-31")
@@ -31,21 +34,30 @@
 #'   download_data_wrds_crsp("wrds_crsp_monthly", "2020-11-01", "2020-12-31",
 #'                           additional_columns = c("mthvol", "mthvolflg"))
 #' }
-#'
-#' @import dplyr
-#' @import tidyr
-#' @import lubridate
-#'
-#' @export
-download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500, version = "v2", additional_columns = NULL) {
+download_data_wrds_crsp <- function(
+    type, start_date, end_date, batch_size = 500, version = "v2", additional_columns = NULL
+  ) {
 
-  if (!(version %in% c("v1", "v2"))) stop("Parameter version must be equal to v1 or v2.")
+  batch_size <- as.integer(batch_size)
+  if (batch_size <= 0) {
+    stop("Paramter 'batch_size' must be an integer larger than 0.")
+  }
+
+  if (!(version %in% c("v1", "v2"))) {
+    stop("Parameter 'version' must be a character equal to 'v1' or 'v2'.")
+  }
 
   check_if_package_installed("dbplyr", type)
-  start_date <- as.Date(start_date)
-  end_date <- as.Date(end_date)
 
-  in_schema <- getNamespace("dbplyr")$in_schema
+  if (missing(start_date) || missing(end_date)) {
+    start_date <- Sys.Date() %m-% years(2)
+    end_date <- Sys.Date() %m-% years(1)
+    message("No start_date or end_date provided. Using the range ",
+            start_date, " to ", end_date, " to avoid downloading large amounts of data.")
+  } else {
+    start_date <- as.Date(start_date)
+    end_date <- as.Date(end_date)
+  }
 
   con <- get_wrds_connection()
 
@@ -53,34 +65,37 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
 
     if (version == "v1") {
 
-      msf_db <- tbl(con, in_schema("crsp", "msf"))
-      msenames_db <- tbl(con, in_schema("crsp", "msenames"))
-      msedelist_db <- tbl(con, in_schema("crsp", "msedelist"))
+      msf_db <- tbl(con, I("crsp.msf"))
+      msenames_db <- tbl(con, I("crsp.msenames"))
+      msedelist_db <- tbl(con, I("crsp.msedelist"))
+
+      msf_db_columns <- c("permno", colnames(msf_db)[-which(colnames(msf_db) %in% colnames(msenames_db))])
 
       crsp_monthly <- msf_db |>
         filter(between(date, start_date, end_date)) |>
+        select(all_of(msf_db_columns)) |>
         inner_join(
           msenames_db |>
-            filter(shrcd %in% c(10, 11)) |>
-            select(permno, exchcd, siccd, namedt, nameendt),
+            filter(shrcd %in% c(10, 11)),
           join_by(permno)
         ) |>
         filter(between(date, namedt, nameendt)) |>
-        mutate(month = floor_date(date, "month")) |>
+        mutate(calculation_date = date,
+               date = floor_date(date, "month")) |>
         left_join(
           msedelist_db |>
             select(permno, dlstdt, dlret, dlstcd) |>
-            mutate(month = floor_date(dlstdt, "month")),
-          join_by(permno, month)
+            mutate(date = floor_date(dlstdt, "month")),
+          join_by(permno, date)
         ) |>
         select(
-          permno, date, month, ret, shrout, altprc,
+          permno, date, calculation_date, ret, shrout, altprc,
           exchcd, siccd, dlret, dlstcd,
-          additional_columns
+          all_of(additional_columns)
         ) |>
         collect() |>
         mutate(
-          month = ymd(month),
+          date = ymd(date),
           shrout = shrout * 1000
         )
 
@@ -93,11 +108,11 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         )
 
       mktcap_lag <- crsp_monthly |>
-        mutate(month = month %m+% months(1)) |>
-        select(permno, month, mktcap_lag = mktcap)
+        mutate(date = date %m+% months(1)) |>
+        select(permno, date, mktcap_lag = mktcap)
 
       crsp_monthly <- crsp_monthly |>
-        left_join(mktcap_lag, join_by(permno, month))
+        left_join(mktcap_lag, join_by(permno, date))
 
       crsp_monthly <- crsp_monthly |>
         mutate(exchange = case_when(
@@ -134,14 +149,13 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         )) |>
         select(-c(dlret, dlstcd))
 
-      factors_ff3_monthly <- download_data_factors_ff(
-        "factors_ff3_monthly", start_date, end_date
-      ) |>
-        rename(month = date)
+      factors_ff_3_monthly <- download_data_factors_ff(
+        "factors_ff_3_monthly", start_date, end_date
+      )
 
       crsp_monthly <- crsp_monthly |>
-        left_join(factors_ff3_monthly,
-                  join_by(month)
+        left_join(factors_ff_3_monthly,
+                  join_by(date)
         ) |>
         mutate(
           ret_excess = ret_adj - risk_free,
@@ -150,16 +164,18 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         select(-risk_free, -mkt_excess, -hml, -smb)
 
       processed_data <- crsp_monthly |>
-        drop_na(ret_excess, mktcap, mktcap_lag)
+        tidyr::drop_na(ret_excess, mktcap, mktcap_lag)
 
     } else {
 
-      msf_db <- tbl(con, in_schema("crsp", "msf_v2"))
-      stksecurityinfohist_db <- tbl(con, in_schema("crsp", "stksecurityinfohist"))
+      msf_db <- tbl(con, I("crsp.msf_v2"))
+      stksecurityinfohist_db <- tbl(con, I("crsp.stksecurityinfohist"))
+
+      msf_db_columns <- c("permno", colnames(msf_db)[-which(colnames(msf_db) %in% colnames(stksecurityinfohist_db))])
 
       crsp_monthly <- msf_db |>
         filter(between(mthcaldt, start_date, end_date)) |>
-        select(-c(siccd, primaryexch, conditionaltype, tradingstatusflg)) |>
+        select(all_of(msf_db_columns)) |>
         inner_join(
           stksecurityinfohist_db |>
             filter(sharetype == "NS" &
@@ -169,27 +185,25 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
                      issuertype %in% c("ACOR", "CORP") &
                      primaryexch %in% c("N", "A", "Q") &
                      conditionaltype %in% c("RW", "NW") &
-                     tradingstatusflg == "A") |>
-            select(permno, secinfostartdt, secinfoenddt,
-                   primaryexch, siccd),
+                     tradingstatusflg == "A"),
           join_by(permno)
         )  |>
         filter(between(mthcaldt, secinfostartdt, secinfoenddt)) |>
-        mutate(month = floor_date(mthcaldt, "month")) |>
+        mutate(date = floor_date(mthcaldt, "month")) |>
         select(
           permno,
-          date = mthcaldt,
-          month,
+          date,
+          calculation_date = mthcaldt,
           ret = mthret,
           shrout,
           prc = mthprc,
           primaryexch,
           siccd,
-          additional_columns
+          all_of(additional_columns)
         ) |>
         collect() |>
         mutate(
-          month = ymd(month),
+          date = ymd(date),
           shrout = shrout * 1000
         )
 
@@ -202,11 +216,11 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         )
 
       mktcap_lag <- crsp_monthly |>
-        mutate(month = month %m+% months(1)) |>
-        select(permno, month, mktcap_lag = mktcap)
+        mutate(date = date %m+% months(1)) |>
+        select(permno, date, mktcap_lag = mktcap)
 
       crsp_monthly <- crsp_monthly |>
-        left_join(mktcap_lag, join_by(permno, month))
+        left_join(mktcap_lag, join_by(permno, date))
 
       crsp_monthly <- crsp_monthly |>
         mutate(exchange = case_when(
@@ -232,14 +246,13 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
           .default = "Missing"
         ))
 
-      factors_ff3_monthly <- download_data_factors_ff(
-        "factors_ff3_monthly", start_date, end_date
-      ) |>
-        rename(month = date)
+      factors_ff_3_monthly <- download_data_factors_ff(
+        "factors_ff_3_monthly", start_date, end_date
+      )
 
       crsp_monthly <- crsp_monthly |>
-        left_join(factors_ff3_monthly,
-                  join_by(month)
+        left_join(factors_ff_3_monthly,
+                  join_by(date)
         ) |>
         mutate(
           ret_excess = ret - risk_free,
@@ -248,7 +261,7 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         select(-risk_free, -mkt_excess, -hml, -smb)
 
       processed_data <- crsp_monthly |>
-        drop_na(ret_excess, mktcap, mktcap_lag)
+        tidyr::drop_na(ret_excess, mktcap, mktcap_lag)
     }
   }
 
@@ -256,17 +269,19 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
 
     if (version == "v1") {
 
-      dsf_db <- tbl(con, in_schema("crsp", "dsf")) |>
+      dsf_db <- tbl(con, I("crsp.dsf")) |>
         filter(between(date, start_date, end_date))
-      msenames_db <- tbl(con, in_schema("crsp", "msenames"))
-      msedelist_db <- tbl(con, in_schema("crsp", "msedelist"))
+      msenames_db <- tbl(con, I("crsp.msenames"))
+      msedelist_db <- tbl(con, I("crsp.msedelist"))
+
+      dsf_db_columns <- c("permno", colnames(dsf_db)[-which(colnames(dsf_db) %in% colnames(msenames_db))])
 
       permnos <- dsf_db |>
         distinct(permno) |>
         pull()
 
-      factors_ff3_daily <- download_data_factors_ff(
-        "factors_ff3_daily", start_date, end_date
+      factors_ff_3_daily <- download_data_factors_ff(
+        "factors_ff_3_daily", start_date, end_date
       )
 
       batches <- ceiling(length(permnos) / batch_size)
@@ -281,9 +296,17 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
 
         crsp_daily_sub <- dsf_db |>
           filter(permno %in% permno_batch) |>
-          select(permno, date, ret, additional_columns) |>
+          select(all_of(dsf_db_columns)) |>
+          inner_join(
+            msenames_db |>
+              filter(shrcd %in% c(10, 11)),
+            join_by(permno)
+          ) |>
+          filter(between(date, namedt, nameendt)) |>
+          select(permno, date, ret,
+                 all_of(additional_columns)) |>
           collect() |>
-          drop_na()
+          tidyr::drop_na(permno, date, ret)
 
         if (nrow(crsp_daily_sub) > 0) {
 
@@ -291,7 +314,7 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
             filter(permno %in% permno_batch) |>
             select(permno, dlstdt, dlret) |>
             collect() |>
-            drop_na()
+            tidyr::drop_na()
 
           crsp_daily_sub <- crsp_daily_sub |>
             left_join(msedelist_sub, join_by(permno, date == dlstdt)) |>
@@ -303,13 +326,12 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
             select(-c(dlret, dlstdt)) |>
             left_join(msedelist_sub |>
                         select(permno, dlstdt), join_by(permno)) |>
-            mutate(dlstdt = replace_na(dlstdt, as.Date(end_date))) |>
+            mutate(dlstdt = tidyr::replace_na(dlstdt, as.Date(end_date))) |>
             filter(date <= dlstdt) |>
             select(-dlstdt)
 
           crsp_daily_list[[j]] <- crsp_daily_sub |>
-            mutate(month = floor_date(date, "month")) |>
-            left_join(factors_ff3_daily |>
+            left_join(factors_ff_3_daily |>
                         select(date, risk_free), join_by(date)) |>
             mutate(
               ret_excess = ret - risk_free,
@@ -325,15 +347,18 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
 
     } else {
 
-      dsf_db <- tbl(con, in_schema("crsp", "dsf_v2"))
-      stksecurityinfohist_db <- tbl(con, in_schema("crsp", "stksecurityinfohist"))
+      dsf_db <- tbl(con, I("crsp.dsf_v2")) |>
+        filter(between(dlycaldt, start_date, end_date))
+      stksecurityinfohist_db <- tbl(con, I("crsp.stksecurityinfohist"))
+
+      dsf_db_columns <- c("permno", colnames(dsf_db)[-which(colnames(dsf_db) %in% colnames(stksecurityinfohist_db))])
 
       permnos <- dsf_db |>
         distinct(permno) |>
         pull()
 
-      factors_ff3_daily <- download_data_factors_ff(
-        "factors_ff3_daily", start_date, end_date
+      factors_ff_3_daily <- download_data_factors_ff(
+        "factors_ff_3_daily", start_date, end_date
       )
 
       batches <- ceiling(length(permnos) / batch_size)
@@ -347,10 +372,8 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
         ]
 
         crsp_daily_sub <- dsf_db |>
-          filter(
-            permno %in% permno_batch,
-            between(dlycaldt, start_date, end_date)
-          ) |>
+          filter(permno %in% permno_batch) |>
+          select(all_of(dsf_db_columns)) |>
           inner_join(
             stksecurityinfohist_db |>
               filter(sharetype == "NS" &
@@ -360,20 +383,19 @@ download_data_wrds_crsp <- function(type, start_date, end_date, batch_size = 500
                        issuertype %in% c("ACOR", "CORP") &
                        primaryexch %in% c("N", "A", "Q") &
                        conditionaltype %in% c("RW", "NW") &
-                       tradingstatusflg == "A") |>
-              select(permno, secinfostartdt, secinfoenddt),
+                       tradingstatusflg == "A"),
             join_by(permno)
           ) |>
           filter(between(dlycaldt, secinfostartdt, secinfoenddt))  |>
-          select(permno, date = dlycaldt, ret = dlyret, additional_columns) |>
+          select(permno, date = dlycaldt, ret = dlyret,
+                 all_of(additional_columns)) |>
           collect() |>
-          drop_na()
+          tidyr::drop_na(permno, date, ret)
 
         if (nrow(crsp_daily_sub) > 0) {
 
           crsp_daily_list[[j]] <- crsp_daily_sub |>
-            mutate(month = floor_date(date, "month")) |>
-            left_join(factors_ff3_daily |>
+            left_join(factors_ff_3_daily |>
                         select(date, risk_free), join_by(date)) |>
             mutate(
               ret_excess = ret - risk_free,

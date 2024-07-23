@@ -11,7 +11,7 @@ utils::globalVariables(
     "lpermno", "lt", "mktcap", "namedt", "nameendt", "oancf", "permno", "pstk", "pstkl", "pstkrv", "ret",
     "ret_adj", "ret_excess", "risk_free", "sale", "shrcd", "shrout", "siccd", "txdb", "txditc", "xint",
     "xsga","ret_excess",
-    "dlycaldt", "dlyret", "issuertype", "mthcaldt", "mthprc", "mthret", "prc", "primaryexch",
+    "dlycaldt", "dlyret", "issuertype", "mthcaldt", "calculation_date", "mthprc", "mthret", "prc", "primaryexch",
     "secinfoenddt", "secinfostartdt", "securitysubtype", "securitytype", "sharetype",
     "usincflg", "hml", "smb",
     "issuer_id", "sic_code", "country_domicile",
@@ -29,6 +29,7 @@ utils::globalVariables(
     "asof_cd", "days_to_sttl_ct", "days_to_sttl_ct2", "msg_seq_nb", "orig_msg_seq_nb",
     "pr_trd_dt", "spcl_trd_fl", "stlmnt_dt", "trc_st", "trd_rpt_dt", "trd_rpt_tm", "wis_fl",
     "conditionaltype", "tradingstatusflg",
-    "log_d12", "log_e12"
+    "log_d12", "log_e12",
+    "rdq", "fqtr", "fyearq", "atq", "ceqq"
   )
 )
