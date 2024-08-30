@@ -18,6 +18,7 @@
 #' @seealso \code{\link[RPostgres]{Postgres}}, \code{\link[DBI]{dbDisconnect}} for more
 #'          information on managing database connections.
 #' @export
+#'
 #' @examples
 #' \donttest{
 #'   # Before using this function, set your WRDS credentials:
@@ -31,10 +32,14 @@
 get_wrds_connection <- function() {
 
   if (!nzchar(Sys.getenv("WRDS_USER")) || !nzchar(Sys.getenv("WRDS_PASSWORD"))) {
-    message("WRDS credentials not found. Please set them using set_wrds_credentials().")
+    cli::cli_inform(
+      "WRDS credentials not found. Please set them using {.fn set_wrds_credentials}."
+    )
   }
 
-  check_if_package_installed("RPostgres", "wrds_*")
+  rlang::check_installed(
+    "RPostgres", reason = "to download types wrds_*."
+  )
 
   DBI::dbConnect(
     RPostgres::Postgres(),

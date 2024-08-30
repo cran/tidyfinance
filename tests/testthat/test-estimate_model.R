@@ -9,8 +9,8 @@ data <- data.frame(
 # Test with sufficient observations and a single independent variable
 test_that("Single independent variable with sufficient observations", {
   result <- estimate_model(data, "ret_excess ~ mkt_excess", min_obs = 1)
-  expect_type(result, "double")
-  expect_length(result, 1)
+  expect_type(result, "list")
+  expect_length(ncol(result), 1)
 })
 
 # Test with sufficient observations and multiple independent variables
@@ -36,10 +36,37 @@ test_that("Insufficient observations", {
 test_that("Exactly minimum required observations", {
   min_obs_data <- data[1:10, ]
   result <- estimate_model(min_obs_data, "ret_excess ~ mkt_excess", min_obs = 10)
-  expect_type(result, "double")
+  expect_type(result, "list")
 })
 
 # Test with no independent variables specified
 test_that("No independent variables specified", {
   expect_error(estimate_model(data, min_obs = 1))
+})
+
+test_that("estimate_model returns tibble with only NAs when insufficient data", {
+  set.seed(1234)
+  df <- tibble(
+    date = seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-01"), by = "month"),
+    ret_excess = rnorm(12, 0, 0.1),
+    mkt_excess = rnorm(12, 0, 0.1),
+    smb = rnorm(12, 0, 0.1),
+    hml = rnorm(12, 0, 0.1)
+  )
+
+  model <- "ret_excess ~ mkt_excess + smb + hml"
+
+  betas <- slider::slide_period_dfr(
+    .x = df,
+    .i = df$date,
+    .period = "month",
+    .f = ~ estimate_model(., model, min_obs = 2),
+    .before = 3 - 1,
+    .complete = FALSE
+  )
+
+  # Check if all values in the tibble are NA
+  expect_true(all(is.na(betas)))
+  # Check if the output is a tibble
+  expect_s3_class(betas, "tbl_df")
 })

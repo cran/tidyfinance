@@ -24,17 +24,15 @@
 #'   compustat_annual <- download_data_wrds("wrds_compustat_annual", "2020-01-01", "2020-12-31")
 #'   ccm_links <- download_data_wrds("wrds_ccm_links", "2020-01-01", "2020-12-31")
 #' }
-download_data_wrds <- function(type, start_date, end_date) {
+download_data_wrds <- function(type, start_date = NULL, end_date = NULL) {
 
   check_supported_type(type)
 
   if (grepl("wrds_crsp", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_crsp(type, start_date, end_date)
-  }
-  if (grepl("wrds_compustat", type, fixed = TRUE)) {
+  } else if (grepl("wrds_compustat", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_compustat(type, start_date, end_date)
-  }
-  if (grepl("wrds_ccm_links", type, fixed = TRUE)) {
+  } else if (grepl("wrds_ccm_links", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_ccm_links()
   }
 

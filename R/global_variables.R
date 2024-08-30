@@ -1,7 +1,7 @@
 # Set global variables ------------------------------------------------
 utils::globalVariables(
   c(
-    "date", "rp_div", "dp", "dy", "ep", "de", "svar", "bm", "b/m", "ntis", "tbl", "lty", "ltr",
+    "date", "rp_div", "dp", "dy", "ep", "de", "svar", "bm", "b.m", "ntis", "tbl", "lty", "ltr",
     "tms", "dfy", "infl", "AAA", "BAA", "D12", "DATE", "E12", "Index", "IndexDiv", "Rfree",
     "mkt-rf", "mkt_excess", "rf", "year", "month", "f", "mkt", "yyyymm", "yyyyq", "quarter",
     "yyyy", "logret",
@@ -30,6 +30,15 @@ utils::globalVariables(
     "pr_trd_dt", "spcl_trd_fl", "stlmnt_dt", "trc_st", "trd_rpt_dt", "trd_rpt_tm", "wis_fl",
     "conditionaltype", "tradingstatusflg",
     "log_d12", "log_e12",
-    "rdq", "fqtr", "fyearq", "atq", "ceqq"
+    "rdq", "fqtr", "fyearq", "atq", "ceqq",
+    "beta_date", "estimates", "name", "risk_premium", "row_check",
+    "standard_error", "t_statistic", "value",
+    "VALUE",
+    "bottom", "closest", "long_short_return", "lower_bound", "mktcap_lag",
+    "portfolio", "portfolio_main", "portfolio_secondary", "ret_excess_ew",
+    "ret_excess_vw", "ret_measure", "top", "upper_bound",
+    "Anlageklasse", "Asset.Class", "symbol",
+    "country", "industry", "ipoyear", "sector",
+    "..date", "..id"
   )
 )

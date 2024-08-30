@@ -35,25 +35,31 @@
 #'                           additional_columns = c("mthvol", "mthvolflg"))
 #' }
 download_data_wrds_crsp <- function(
-    type, start_date, end_date, batch_size = 500, version = "v2", additional_columns = NULL
+  type, start_date = NULL, end_date = NULL, batch_size = 500, version = "v2", additional_columns = NULL
   ) {
 
   batch_size <- as.integer(batch_size)
   if (batch_size <= 0) {
-    stop("Paramter 'batch_size' must be an integer larger than 0.")
+    cli::cli_abort("{.arg batch_size} must be an integer larger than 0.")
   }
 
   if (!(version %in% c("v1", "v2"))) {
-    stop("Parameter 'version' must be a character equal to 'v1' or 'v2'.")
+    cli::cli_abort(
+      "{.arg version} must be a character equal to {.str v1} or {.str v2}."
+    )
   }
 
-  check_if_package_installed("dbplyr", type)
+  rlang::check_installed(
+    "dbplyr", reason = paste0("to download type ", type, ".")
+  )
 
-  if (missing(start_date) || missing(end_date)) {
+  if (is.null(start_date) || is.null(end_date)) {
     start_date <- Sys.Date() %m-% years(2)
     end_date <- Sys.Date() %m-% years(1)
-    message("No start_date or end_date provided. Using the range ",
-            start_date, " to ", end_date, " to avoid downloading large amounts of data.")
+    cli::cli_inform(c(
+      "No {.arg start_date} or {.arg end_date} provided.",
+      "Using the range {start_date} to {end_date} to avoid downloading large amounts of data."
+    ))
   } else {
     start_date <- as.Date(start_date)
     end_date <- as.Date(end_date)
@@ -164,7 +170,7 @@ download_data_wrds_crsp <- function(
         select(-risk_free, -mkt_excess, -hml, -smb)
 
       processed_data <- crsp_monthly |>
-        tidyr::drop_na(ret_excess, mktcap, mktcap_lag)
+        tidyr::drop_na(ret_excess, mktcap)
 
     } else {
 
@@ -261,7 +267,7 @@ download_data_wrds_crsp <- function(
         select(-risk_free, -mkt_excess, -hml, -smb)
 
       processed_data <- crsp_monthly |>
-        tidyr::drop_na(ret_excess, mktcap, mktcap_lag)
+        tidyr::drop_na(ret_excess, mktcap)
     }
   }
 
@@ -287,6 +293,8 @@ download_data_wrds_crsp <- function(
       batches <- ceiling(length(permnos) / batch_size)
 
       crsp_daily_list <- list()
+
+      cli::cli_progress_bar("Downloading batches", total = batches, clear = TRUE)
 
       for (j in 1:batches) {
 
@@ -339,6 +347,7 @@ download_data_wrds_crsp <- function(
             ) |>
             select(-risk_free)
         }
+        cli::cli_progress_update()
       }
 
       disconnection_connection(con)
@@ -364,6 +373,8 @@ download_data_wrds_crsp <- function(
       batches <- ceiling(length(permnos) / batch_size)
 
       crsp_daily_list <- list()
+
+      cli::cli_progress_bar("Downloading batches", total = batches, clear = TRUE)
 
       for (j in 1:batches) {
 
@@ -403,6 +414,7 @@ download_data_wrds_crsp <- function(
             ) |>
             select(-risk_free)
         }
+        cli::cli_progress_update()
       }
 
       disconnection_connection(con)

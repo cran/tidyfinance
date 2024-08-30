@@ -13,13 +13,15 @@
 #'   corresponding quantile values.
 #'
 #' @export
+#'
 #' @examples
 #' set.seed(123)
 #' data <- rnorm(100)
 #' winsorized_data <- winsorize(data, 0.05)
+#'
 winsorize <- function(x, cut) {
   if (cut < 0 || cut > 0.5) {
-    stop("The parameter 'cut' must be inside [0, 0.5].")
+    cli::cli_abort("{.arg cut} must be inside [0, 0.5].")
   }
 
   lb <- quantile(x, cut, na.rm = TRUE)
