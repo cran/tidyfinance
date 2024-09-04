@@ -1,7 +1,7 @@
 Type: Package
 Package: tidyfinance
 Title: Tidy Finance Helper Functions
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
     person("Christoph", "Scheuch", , "christoph.scheuch@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-0423-6819")),
@@ -35,11 +35,11 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 RoxygenNote: 7.3.2.9000
 NeedsCompilation: no
-Packaged: 2024-08-30 08:30:18 UTC; krise
+Packaged: 2024-09-04 07:44:44 UTC; krise
 Author: Christoph Scheuch [aut, cre] (<https://orcid.org/0009-0004-0423-6819>),
   Stefan Voigt [aut] (<https://orcid.org/0000-0001-5619-3161>),
   Patrick Weiss [aut] (<https://orcid.org/0000-0002-9282-5872>),
   Maximilian Mücke [ctb] (<https://orcid.org/0009-0000-9432-9795>)
 Maintainer: Christoph Scheuch <christoph.scheuch@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-08-30 08:40:02 UTC
+Date/Publication: 2024-09-04 09:00:02 UTC
