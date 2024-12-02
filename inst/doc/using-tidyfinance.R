@@ -5,10 +5,10 @@ knitr::opts_chunk$set(
 )
 
 ## -----------------------------------------------------------------------------
-#  install.packages("tidyfinance")
+# install.packages("tidyfinance")
 
 ## -----------------------------------------------------------------------------
-#  pak::pak("tidy-finance/r-tidyfinance")
+# pak::pak("tidy-finance/r-tidyfinance")
 
 ## -----------------------------------------------------------------------------
 library(tidyfinance)
@@ -17,25 +17,25 @@ library(tidyfinance)
 list_supported_types()
 
 ## -----------------------------------------------------------------------------
-download_data("factors_ff_3_monthly", "2020-01-01", "2020-12-31")
+# download_data("factors_ff_3_monthly", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
-download_data("factors_q5_daily", "2020-01-01", "2020-12-31")
+# download_data("factors_q5_daily", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
-#  download_data("wrds_crsp_monthly", "2020-01-01", "2020-12-31")
+# download_data("wrds_crsp_monthly", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
-#  download_data_wrds_crsp("wrds_crsp_monthly", "2020-01-01", "2020-12-31", additional_columns = "mthvol")
+# download_data_wrds_crsp("wrds_crsp_monthly", "2020-01-01", "2020-12-31", additional_columns = "mthvol")
 
 ## -----------------------------------------------------------------------------
-#  download_data_wrds_compustat("wrds_compustat_annual", "2000-01-01", "2020-12-31", additional_columns = c("acoxar", "amc", "aldo"))
+# download_data_wrds_compustat("wrds_compustat_annual", "2000-01-01", "2020-12-31", additional_columns = c("acoxar", "amc", "aldo"))
 
 ## -----------------------------------------------------------------------------
 list_tidy_finance_chapters()
 
 ## -----------------------------------------------------------------------------
-#  open_tidy_finance_website("beta-estimation")
+# open_tidy_finance_website("beta-estimation")
 
 ## -----------------------------------------------------------------------------
 library(dplyr)

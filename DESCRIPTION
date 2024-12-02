@@ -1,13 +1,13 @@
 Type: Package
 Package: tidyfinance
 Title: Tidy Finance Helper Functions
-Version: 0.4.1
+Version: 0.4.2
 Authors@R: c(
-    person("Christoph", "Scheuch", , "christoph.scheuch@gmail.com", role = c("aut", "cre"),
+    person("Christoph", "Scheuch", , "christoph@tidy-intelligence.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0009-0004-0423-6819")),
-    person("Stefan", "Voigt", , "stefan.voigt@econ.ku.dk", role = "aut",
+    person("Stefan", "Voigt", , "stefan.voigt@econ.ku.dk", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0001-5619-3161")),
-    person("Patrick", "Weiss", , "patrickw@ru.is", role = "aut",
+    person("Patrick", "Weiss", , "patrickw@ru.is", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-9282-5872")),
     person("Maximilian", "Mücke", role = "ctb",
            comment = c(ORCID = "0009-0000-9432-9795"))
@@ -33,13 +33,14 @@ Suggests: DBI (>= 1.2.2), dbplyr (>= 2.5.0), frenchdata (>= 0.2.0),
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
-RoxygenNote: 7.3.2.9000
+RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2024-09-04 07:44:44 UTC; krise
-Author: Christoph Scheuch [aut, cre] (<https://orcid.org/0009-0004-0423-6819>),
-  Stefan Voigt [aut] (<https://orcid.org/0000-0001-5619-3161>),
-  Patrick Weiss [aut] (<https://orcid.org/0000-0002-9282-5872>),
+Packaged: 2024-11-30 11:29:34 UTC; krise
+Author: Christoph Scheuch [aut, cre, cph]
+    (<https://orcid.org/0009-0004-0423-6819>),
+  Stefan Voigt [aut, cph] (<https://orcid.org/0000-0001-5619-3161>),
+  Patrick Weiss [aut, cph] (<https://orcid.org/0000-0002-9282-5872>),
   Maximilian Mücke [ctb] (<https://orcid.org/0009-0000-9432-9795>)
-Maintainer: Christoph Scheuch <christoph.scheuch@gmail.com>
+Maintainer: Christoph Scheuch <christoph@tidy-intelligence.com>
 Repository: CRAN
-Date/Publication: 2024-09-04 09:00:02 UTC
+Date/Publication: 2024-12-02 09:20:02 UTC

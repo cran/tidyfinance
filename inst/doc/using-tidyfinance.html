@@ -60,7 +60,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -384,43 +384,14 @@ type:</p>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 307 more rows</span></span></code></pre></div>
 <p>So, for instance, if you want to download monthly Fama-French
 Three-Factor data, you can call:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 5</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-01    -0.0011 -0.0313 -0.0625    0.0013</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-02-01    -0.0813  0.0107 -0.038     0.0012</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-03-01    -0.134  -0.0479 -0.139     0.0013</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-04-01     0.136   0.0245 -0.0134    0     </span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-05-01     0.0558  0.0249 -0.0485    0.0001</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-06-01     0.0246  0.0269 -0.0223    0.0001</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-07-01     0.0577 -0.023  -0.0144    0.0001</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-08-01     0.0763 -0.0028 -0.0288    0.0001</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-09-01    -0.0363 -0.0003 -0.0265    0.0001</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-10-01    -0.021   0.0427  0.0431    0.0001</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 11 2020-11-01     0.125   0.0572  0.0215    0.0001</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 12 2020-12-01     0.0463  0.0479 -0.0134    0.0001</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_monthly&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span></code></pre></div>
 <p>Under the hood, the function uses the <code>frenchdata</code> package
 (see its documentation <a href="https://CRAN.R-project.org/package=frenchdata">here</a>) and
 applies some cleaning steps, as in TFWR. If you haven’t installed
 <code>frenchdata</code> yet, you’ll get prompted to install it first
 before you can download this specific data type.</p>
 <p>You can also access q-Factor data in this way, by calling:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_q5_daily&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 253 × 7</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;    date       risk_free mkt_excess       me        ia       roe        eg</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  1 2020-01-02  0.000055   0.00863  -0.0112  -0.00170   0.000681  0.00338 </span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  2 2020-01-03  0.000055  -0.00673   0.00234 -0.00192  -0.00156   0.000703</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  3 2020-01-06  0.000055   0.00360  -0.00359 -0.00408  -0.00479   0.000552</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  4 2020-01-07  0.000055  -0.00192  -0.00139 -0.00323  -0.00511  -0.00272 </span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  5 2020-01-08  0.000055   0.00467  -0.00107 -0.00120   0.00454   0.00622 </span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  6 2020-01-09  0.000055   0.00649  -0.00684 -0.000647  0.00294   0.00522 </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  7 2020-01-10  0.000055  -0.00335  -0.00236 -0.00205   0.0004    0.00338 </span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;  8 2020-01-13  0.000055   0.00729  -0.00199  0.00210   0.00305   0.000733</span></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;  9 2020-01-14  0.000055  -0.000559  0.00474 -0.00110  -0.00992  -0.00717 </span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; 10 2020-01-15  0.000055   0.00164   0.00305 -0.00265  -0.0011    0.00121 </span></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 243 more rows</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">download_data</span>(<span class="st">&quot;factors_q5_daily&quot;</span>, <span class="st">&quot;2020-01-01&quot;</span>, <span class="st">&quot;2020-12-31&quot;</span>)</span></code></pre></div>
 <p>To ensure that we can extend the functionality of the download
 functions for specific types, we also provide domain-specific download
 functions. The <code>download_data(&quot;factors_ff_3_monthly&quot;)</code>
