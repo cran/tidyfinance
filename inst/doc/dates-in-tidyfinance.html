@@ -361,7 +361,7 @@ can see that each row refers to a specific month of a year and the
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>factors_ff_3_monthly <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_monthly&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; No `start_date` or `end_date` provided. Returning the full data set.</span></span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>factors_ff_3_monthly</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,180 × 5</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,182 × 5</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.0296 -0.0256 -0.0243    0.0022</span></span>
@@ -374,7 +374,7 @@ can see that each row refers to a specific month of a year and the
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  8 1927-02-01     0.0418  0.0004  0.0294    0.0026</span></span>
 <span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  9 1927-03-01     0.0013 -0.0165 -0.0261    0.003 </span></span>
 <span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 10 1927-04-01     0.0046  0.003   0.0081    0.0025</span></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,170 more rows</span></span></code></pre></div>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,172 more rows</span></span></code></pre></div>
 <p>Why did we use the first day of a month here? This convention has the
 big advantage that you can easily add or subtract months or compute date
 differences. For instance, in the following code chunk, we subtract 3
@@ -384,7 +384,7 @@ months:</p>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">select</span>(date) <span class="sc">|&gt;</span> </span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_lag3 =</span> date <span class="sc">%m-%</span> <span class="fu">months</span>(<span class="dv">3</span>),</span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>         <span class="at">date_difference =</span> <span class="fu">interval</span>(date_lag3, date) <span class="sc">%/%</span> <span class="fu">months</span>(<span class="dv">1</span>))</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,180 × 3</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,182 × 3</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;    date       date_lag3  date_difference</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;     &lt;date&gt;               &lt;dbl&gt;</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01 1926-04-01               3</span></span>
@@ -397,13 +397,13 @@ months:</p>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  8 1927-02-01 1926-11-01               3</span></span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  9 1927-03-01 1926-12-01               3</span></span>
 <span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 10 1927-04-01 1927-01-01               3</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,170 more rows</span></span></code></pre></div>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,172 more rows</span></span></code></pre></div>
 <p>As another example, the <code>date</code> column is arguably straight
 forward for daily data, such as daily Fama-French factors:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>factors_ff_3_daily <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_daily&quot;</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; No `start_date` or `end_date` provided. Returning the full data set.</span></span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>factors_ff_3_daily</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,860 × 5</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,901 × 5</span></span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
 <span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.001  -0.0025 -0.0027   0.00009</span></span>
@@ -416,14 +416,14 @@ forward for daily data, such as daily Fama-French factors:</p>
 <span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;  8 1926-07-12     0.0004 -0.0003  0.0064   0.00009</span></span>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;  9 1926-07-13     0.0048 -0.0028 -0.002    0.00009</span></span>
 <span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 10 1926-07-14     0.0004  0.0007 -0.0043   0.00009</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,850 more rows</span></span></code></pre></div>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,891 more rows</span></span></code></pre></div>
 <p>Each row refers to a trading date, so <code>date</code> refers to the
 actual date. So computing date differences to the last row might yield
 an integer larger than 1.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>factors_ff_3_daily <span class="sc">|&gt;</span> </span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">select</span>(date) <span class="sc">|&gt;</span> </span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_difference =</span> <span class="fu">interval</span>(<span class="fu">lag</span>(date), date) <span class="sc">%/%</span> <span class="fu">days</span>(<span class="dv">1</span>)) </span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,860 × 2</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,901 × 2</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;    date       date_difference</span></span>
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;               &lt;dbl&gt;</span></span>
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01              NA</span></span>
@@ -436,7 +436,7 @@ an integer larger than 1.</p>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;  8 1926-07-12               2</span></span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;  9 1926-07-13               1</span></span>
 <span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 10 1926-07-14               1</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,850 more rows</span></span></code></pre></div>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,891 more rows</span></span></code></pre></div>
 <p>Similarly, working with daily CRSP data is straight-forward:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>crsp_daily <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;wrds_crsp_daily&quot;</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>crsp_daily <span class="sc">|&gt;</span> </span>

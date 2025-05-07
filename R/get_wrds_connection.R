@@ -20,7 +20,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #'   # Before using this function, set your WRDS credentials:
 #'   # Sys.setenv(WRDS_USER = "your_username", WRDS_PASSWORD = "your_password")
 #'
@@ -30,15 +30,17 @@
 #'   # disconnect_connection(con)
 #' }
 get_wrds_connection <- function() {
-
-  if (!nzchar(Sys.getenv("WRDS_USER")) || !nzchar(Sys.getenv("WRDS_PASSWORD"))) {
+  if (
+    !nzchar(Sys.getenv("WRDS_USER")) || !nzchar(Sys.getenv("WRDS_PASSWORD"))
+  ) {
     cli::cli_inform(
       "WRDS credentials not found. Please set them using {.fn set_wrds_credentials}."
     )
   }
 
   rlang::check_installed(
-    "RPostgres", reason = "to download types wrds_*."
+    "RPostgres",
+    reason = "to download types wrds_*."
   )
 
   DBI::dbConnect(

@@ -20,7 +20,7 @@
 #'
 #' @export
 #' @examples
-#' \donttest{
+#' \dontrun{
 #'   crsp_monthly <- download_data_wrds("wrds_crsp_monthly", "2020-01-01", "2020-12-31")
 #'   compustat_annual <- download_data_wrds("wrds_compustat_annual", "2020-01-01", "2020-12-31")
 #'   ccm_links <- download_data_wrds("wrds_ccm_links", "2020-01-01", "2020-12-31")
@@ -28,21 +28,28 @@
 #'   trace_enhanced <- download_data_wrds("wrds_trace_enhanced", cusips = "00101JAH9")
 #' }
 download_data_wrds <- function(type, start_date = NULL, end_date = NULL, ...) {
-
   check_supported_type(type)
 
   if (grepl("wrds_crsp", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_crsp(type, start_date, end_date, ...)
   } else if (grepl("wrds_compustat", type, fixed = TRUE)) {
-    processed_data <- download_data_wrds_compustat(type, start_date, end_date, ...)
+    processed_data <- download_data_wrds_compustat(
+      type,
+      start_date,
+      end_date,
+      ...
+    )
   } else if (grepl("wrds_ccm_links", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_ccm_links(...)
   } else if (grepl("wrds_fisd", type, fixed = TRUE)) {
     processed_data <- download_data_wrds_fisd(...)
   } else if (grepl("wrds_trace_enhanced", type, fixed = TRUE)) {
-    processed_data <- download_data_wrds_trace_enhanced(start_date, end_date, ...)
+    processed_data <- download_data_wrds_trace_enhanced(
+      start_date,
+      end_date,
+      ...
+    )
   }
 
   processed_data
-
 }
