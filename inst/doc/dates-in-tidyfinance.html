@@ -48,8 +48,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -361,20 +362,20 @@ can see that each row refers to a specific month of a year and the
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>factors_ff_3_monthly <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_monthly&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; No `start_date` or `end_date` provided. Returning the full data set.</span></span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>factors_ff_3_monthly</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,182 × 5</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,193 × 5</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.0296 -0.0256 -0.0243    0.0022</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  2 1926-08-01     0.0264 -0.0117  0.0382    0.0025</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  3 1926-09-01     0.0036 -0.014   0.0013    0.0023</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  4 1926-10-01    -0.0324 -0.0009  0.007     0.0032</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  5 1926-11-01     0.0253 -0.001  -0.0051    0.0031</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  6 1926-12-01     0.0262 -0.0003 -0.0005    0.0028</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  7 1927-01-01    -0.0006 -0.0037  0.0454    0.0025</span></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  8 1927-02-01     0.0418  0.0004  0.0294    0.0026</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  9 1927-03-01     0.0013 -0.0165 -0.0261    0.003 </span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 10 1927-04-01     0.0046  0.003   0.0081    0.0025</span></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,172 more rows</span></span></code></pre></div>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.0289 -0.0255 -0.0239    0.0022</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  2 1926-08-01     0.0264 -0.0114  0.0381    0.0025</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  3 1926-09-01     0.0038 -0.0136  0.0005    0.0023</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  4 1926-10-01    -0.0327 -0.0014  0.0082    0.0032</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  5 1926-11-01     0.0254 -0.0011 -0.0061    0.0031</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  6 1926-12-01     0.0262 -0.0007  0.0006    0.0028</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  7 1927-01-01    -0.0005 -0.0032  0.0458    0.0025</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  8 1927-02-01     0.0417  0.0007  0.0272    0.0026</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  9 1927-03-01     0.0014 -0.0177 -0.0238    0.003 </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 10 1927-04-01     0.0047  0.0039  0.0065    0.0025</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,183 more rows</span></span></code></pre></div>
 <p>Why did we use the first day of a month here? This convention has the
 big advantage that you can easily add or subtract months or compute date
 differences. For instance, in the following code chunk, we subtract 3
@@ -384,7 +385,7 @@ months:</p>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">select</span>(date) <span class="sc">|&gt;</span> </span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_lag3 =</span> date <span class="sc">%m-%</span> <span class="fu">months</span>(<span class="dv">3</span>),</span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>         <span class="at">date_difference =</span> <span class="fu">interval</span>(date_lag3, date) <span class="sc">%/%</span> <span class="fu">months</span>(<span class="dv">1</span>))</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,182 × 3</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,193 × 3</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;    date       date_lag3  date_difference</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;     &lt;date&gt;               &lt;dbl&gt;</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01 1926-04-01               3</span></span>
@@ -397,33 +398,33 @@ months:</p>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;  8 1927-02-01 1926-11-01               3</span></span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  9 1927-03-01 1926-12-01               3</span></span>
 <span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 10 1927-04-01 1927-01-01               3</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,172 more rows</span></span></code></pre></div>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,183 more rows</span></span></code></pre></div>
 <p>As another example, the <code>date</code> column is arguably straight
 forward for daily data, such as daily Fama-French factors:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>factors_ff_3_daily <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;factors_ff_3_daily&quot;</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; No `start_date` or `end_date` provided. Returning the full data set.</span></span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>factors_ff_3_daily</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,901 × 5</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 26,129 × 5</span></span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;    date       mkt_excess     smb     hml risk_free</span></span>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.001  -0.0025 -0.0027   0.00009</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;  2 1926-07-02     0.0045 -0.0033 -0.0006   0.00009</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  3 1926-07-06     0.0017  0.003  -0.0039   0.00009</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  4 1926-07-07     0.0009 -0.0058  0.0002   0.00009</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  5 1926-07-08     0.0021 -0.0038  0.0019   0.00009</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  6 1926-07-09    -0.0071  0.0043  0.0057   0.00009</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  7 1926-07-10     0.0062 -0.0053 -0.001    0.00009</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;  8 1926-07-12     0.0004 -0.0003  0.0064   0.00009</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;  9 1926-07-13     0.0048 -0.0028 -0.002    0.00009</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 10 1926-07-14     0.0004  0.0007 -0.0043   0.00009</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,891 more rows</span></span></code></pre></div>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01     0.0009 -0.0025 -0.0027    0.0001</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;  2 1926-07-02     0.0045 -0.0033 -0.0006    0.0001</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  3 1926-07-06     0.0017  0.003  -0.0039    0.0001</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  4 1926-07-07     0.0009 -0.0058  0.0002    0.0001</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  5 1926-07-08     0.0022 -0.0038  0.0019    0.0001</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  6 1926-07-09    -0.0071  0.0043  0.0057    0.0001</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  7 1926-07-10     0.0061 -0.0053 -0.001     0.0001</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;  8 1926-07-12     0.0004 -0.0003  0.0064    0.0001</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;  9 1926-07-13     0.0048 -0.0028 -0.002     0.0001</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 10 1926-07-14     0.0004  0.0007 -0.0043    0.0001</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 26,119 more rows</span></span></code></pre></div>
 <p>Each row refers to a trading date, so <code>date</code> refers to the
 actual date. So computing date differences to the last row might yield
 an integer larger than 1.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>factors_ff_3_daily <span class="sc">|&gt;</span> </span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">select</span>(date) <span class="sc">|&gt;</span> </span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_difference =</span> <span class="fu">interval</span>(<span class="fu">lag</span>(date), date) <span class="sc">%/%</span> <span class="fu">days</span>(<span class="dv">1</span>)) </span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 25,901 × 2</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 26,129 × 2</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;    date       date_difference</span></span>
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;               &lt;dbl&gt;</span></span>
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  1 1926-07-01              NA</span></span>
@@ -436,7 +437,7 @@ an integer larger than 1.</p>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;  8 1926-07-12               2</span></span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;  9 1926-07-13               1</span></span>
 <span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 10 1926-07-14               1</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 25,891 more rows</span></span></code></pre></div>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 26,119 more rows</span></span></code></pre></div>
 <p>Similarly, working with daily CRSP data is straight-forward:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>crsp_daily <span class="ot">&lt;-</span> <span class="fu">download_data</span>(<span class="st">&quot;wrds_crsp_daily&quot;</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>crsp_daily <span class="sc">|&gt;</span> </span>
