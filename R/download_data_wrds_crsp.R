@@ -1,47 +1,106 @@
 #' Download Data from WRDS CRSP
 #'
-#' This function downloads and processes stock return data from the CRSP
-#' database for a specified period. Users can choose between monthly and daily
-#' data types. The function also adjusts returns for delisting and calculates
-#' market capitalization and excess returns over the risk-free rate.
+#' Downloads and processes stock return data from the CRSP database for a
+#' specified period. Users can choose between monthly and daily datasets.
+#' The function also adjusts returns for delisting and calculates market
+#' capitalization and excess returns over the risk-free rate.
 #'
-#' @param type A string specifying the type of CRSP data to download:
+#' @param dataset A string specifying the CRSP dataset to download:
 #'   "crsp_monthly" or "crsp_daily".
-#' @param start_date Optional. A character string or Date object in "YYYY-MM-DD" format
-#'   specifying the start date for the data. If not provided, a subset of the dataset is returned.
-#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD" format
-#'   specifying the end date for the data. If not provided, a subset of the dataset is returned.
+#' @param start_date Optional. A character string or Date object in
+#'   "YYYY-MM-DD" format specifying the start date for the data. If not
+#'   provided, a subset of the dataset is returned.
+#' @param end_date Optional. A character string or Date object in
+#'   "YYYY-MM-DD" format specifying the end date for the data. If not
+#'   provided, a subset of the dataset is returned.
+#' @param type `r lifecycle::badge("deprecated")` Use `dataset` instead.
 #' @param batch_size An optional integer specifying the batch size for
 #'   processing daily data, with a default of 500.
-#' @param version An optional character specifying which CRSP version to use.
-#'   "v2" (the default) uses the updated second version of CRSP, and "v1"
-#'   downloads the legacy version of CRSP.
+#' @param version An optional character specifying which CRSP version to
+#'   use. "v2" (the default) uses the updated second version of CRSP, and
+#'   "v1" downloads the legacy version of CRSP.
 #' @param additional_columns Additional columns from the CRSP monthly or
 #'   daily data as a character vector.
+#' @param add_ccm_links A logical indicating whether CRSP-Compustat links
+#'   should be added automatically using [download_data_wrds_ccm_links()].
+#' @param adjust_volume A logical indicating whether daily CRSP trading
+#'   volume data should be adjusted according to Gao & Ritter (2010).
 #'
-#' @returns A data frame containing CRSP stock returns, adjusted for delistings,
-#'   along with calculated market capitalization and excess returns over the
-#'   risk-free rate. The structure of the returned data frame depends on the
-#'   selected data type.
+#' @returns A data frame containing CRSP stock returns, adjusted for
+#'   delistings, along with calculated market capitalization and excess returns
+#'   over the risk-free rate. The structure of the returned data frame depends
+#'   on the selected dataset.
 #'
+#' @references
+#'   Gao, X., & Ritter, J. R. (2010). The marketing of seasoned equity
+#'   offerings. *Journal of Financial Economics*, 97(1), 33-52.
+#'   \doi{10.1016/j.jfineco.2010.03.007}
+#'
+#' @family WRDS functions
 #' @export
+#'
 #' @examples
 #' \dontrun{
-#'   crsp_monthly <- download_data_wrds_crsp("wrds_crsp_monthly", "2020-11-01", "2020-12-31")
-#'   crsp_daily <- download_data_wrds_crsp("wrds_crsp_daily", "2020-12-01", "2020-12-31")
+#' crsp_monthly <- download_data_wrds_crsp(
+#'   "crsp_monthly",
+#'   "2020-11-01",
+#'   "2020-12-31"
+#' )
+#' crsp_daily <- download_data_wrds_crsp(
+#'   "crsp_daily",
+#'   "2020-12-01",
+#'   "2020-12-31"
+#' )
 #'
-#'   # Add additional columns
-#'   download_data_wrds_crsp("wrds_crsp_monthly", "2020-11-01", "2020-12-31",
-#'                           additional_columns = c("mthvol", "mthvolflg"))
+#' # Add additional columns
+#' download_data_wrds_crsp(
+#'   "crsp_monthly",
+#'   "2020-11-01",
+#'   "2020-12-31",
+#'   additional_columns = c("mthvol", "mthvolflg")
+#' )
 #' }
 download_data_wrds_crsp <- function(
-  type,
+  dataset = NULL,
   start_date = NULL,
   end_date = NULL,
+  type = deprecated(),
   batch_size = 500,
   version = "v2",
-  additional_columns = NULL
+  additional_columns = NULL,
+  add_ccm_links = FALSE,
+  adjust_volume = FALSE
 ) {
+  # Handle explicit type argument
+  if (lifecycle::is_present(type)) {
+    lifecycle::deprecate_warn(
+      when = "0.5.0",
+      what = "download_data_wrds_crsp(type)",
+      details = "Use the `dataset` argument instead."
+    )
+    dataset <- sub("^wrds_", "", type)
+  }
+
+  # Handle legacy type passed as dataset argument
+  if (!is.null(dataset) && is_legacy_type_wrds(dataset)) {
+    lifecycle::deprecate_warn(
+      when = "0.5.0",
+      what = "download_data_wrds_crsp(type)",
+      details = paste0(
+        "The `type` argument is deprecated. ",
+        "Use `dataset` instead (e.g., 'crsp_monthly' instead",
+        "of 'wrds_crsp_monthly')."
+      )
+    )
+    dataset <- sub("^wrds_", "", dataset)
+  }
+
+  if (is.null(dataset)) {
+    cli::cli_abort("Argument {.arg dataset} is required.")
+  }
+
+  check_supported_dataset_wrds_crsp(dataset)
+
   batch_size <- as.integer(batch_size)
   if (batch_size <= 0) {
     cli::cli_abort("{.arg batch_size} must be an integer larger than 0.")
@@ -53,18 +112,13 @@ download_data_wrds_crsp <- function(
     )
   }
 
-  rlang::check_installed(
-    "dbplyr",
-    reason = paste0("to download type ", type, ".")
-  )
-
   dates <- validate_dates(start_date, end_date, use_default_range = TRUE)
   start_date <- dates$start_date
   end_date <- dates$end_date
 
   con <- get_wrds_connection()
 
-  if (grepl("crsp_monthly", type, fixed = TRUE)) {
+  if (dataset == "crsp_monthly") {
     if (version == "v1") {
       msf_db <- tbl(con, I("crsp.msf"))
       msenames_db <- tbl(con, I("crsp.msenames"))
@@ -74,6 +128,11 @@ download_data_wrds_crsp <- function(
         "permno",
         colnames(msf_db)[-which(colnames(msf_db) %in% colnames(msenames_db))]
       )
+
+      first_crsp_date <- msenames_db |>
+        group_by(permno) |>
+        summarise(first_crsp_date = min(namedt, na.rm = TRUE)) |>
+        collect()
 
       crsp_monthly <- msf_db |>
         filter(between(date, start_date, end_date)) |>
@@ -98,6 +157,7 @@ download_data_wrds_crsp <- function(
           ret,
           shrout,
           altprc,
+          cfacpr,
           exchcd,
           siccd,
           dlret,
@@ -110,7 +170,19 @@ download_data_wrds_crsp <- function(
           shrout = shrout * 1000
         )
 
-      disconnection_connection(con)
+      disconnect_connection(con)
+
+      crsp_monthly <- crsp_monthly |>
+        left_join(first_crsp_date, by = "permno") |>
+        mutate(
+          listing_age = pmax(
+            as.integer(
+              lubridate::interval(first_crsp_date, date) %/% months(1)
+            ),
+            0L
+          )
+        ) |>
+        select(-first_crsp_date)
 
       crsp_monthly <- crsp_monthly |>
         mutate(
@@ -168,19 +240,23 @@ download_data_wrds_crsp <- function(
         ) |>
         select(-c(dlret, dlstcd))
 
-      factors_ff_3_monthly <- download_data_factors_ff(
-        "factors_ff_3_monthly",
-        start_date,
-        end_date
+      crsp_monthly <- crsp_monthly |>
+        mutate(
+          prc_adj = abs(na_if(altprc, 0)) / cfacpr,
+          prc_adj = if_else(is.infinite(prc_adj), NA_real_, prc_adj)
+        )
+
+      risk_free_monthly <- download_data_risk_free(
+        start_date = start_date,
+        end_date = end_date
       )
 
       crsp_monthly <- crsp_monthly |>
-        left_join(factors_ff_3_monthly, join_by(date)) |>
+        left_join(risk_free_monthly, join_by(date)) |>
         mutate(
-          ret_excess = ret_adj - risk_free,
-          ret_excess = pmax(ret_excess, -1)
+          ret_excess = ret_adj - risk_free
         ) |>
-        select(-risk_free, -mkt_excess, -hml, -smb)
+        select(-risk_free)
 
       processed_data <- crsp_monthly |>
         tidyr::drop_na(ret_excess, mktcap)
@@ -194,6 +270,11 @@ download_data_wrds_crsp <- function(
           -which(colnames(msf_db) %in% colnames(stksecurityinfohist_db))
         ]
       )
+
+      first_crsp_date <- stksecurityinfohist_db |>
+        group_by(permno) |>
+        summarise(first_crsp_date = min(secinfostartdt, na.rm = TRUE)) |>
+        collect()
 
       crsp_monthly <- msf_db |>
         filter(between(mthcaldt, start_date, end_date)) |>
@@ -231,7 +312,19 @@ download_data_wrds_crsp <- function(
           shrout = shrout * 1000
         )
 
-      disconnection_connection(con)
+      disconnect_connection(con)
+
+      crsp_monthly <- crsp_monthly |>
+        left_join(first_crsp_date, by = "permno") |>
+        mutate(
+          listing_age = pmax(
+            as.integer(
+              lubridate::interval(first_crsp_date, date) %/% months(1)
+            ),
+            0L
+          )
+        ) |>
+        select(-first_crsp_date)
 
       crsp_monthly <- crsp_monthly |>
         mutate(
@@ -274,27 +367,35 @@ download_data_wrds_crsp <- function(
           )
         )
 
-      factors_ff_3_monthly <- download_data_factors_ff(
-        "factors_ff_3_monthly",
-        start_date,
-        end_date
+      risk_free_monthly <- download_data_risk_free(
+        start_date = start_date,
+        end_date = end_date
       )
 
       crsp_monthly <- crsp_monthly |>
-        left_join(factors_ff_3_monthly, join_by(date)) |>
+        left_join(risk_free_monthly, join_by(date)) |>
         mutate(
-          ret_excess = ret - risk_free,
-          ret_excess = pmax(ret_excess, -1)
+          ret_excess = ret - risk_free
         ) |>
-        select(-risk_free, -mkt_excess, -hml, -smb)
+        select(-risk_free)
 
       processed_data <- crsp_monthly |>
         tidyr::drop_na(ret_excess, mktcap)
     }
-  }
-
-  if (grepl("crsp_daily", type, fixed = TRUE)) {
+  } else if (dataset == "crsp_daily") {
     if (version == "v1") {
+      if (isTRUE(adjust_volume)) {
+        if (!all(c("prc", "vol", "cfacpr", "exchcd") %in% additional_columns)) {
+          cli::cli_abort(
+            paste(
+              "{.val prc}, {.val vol}, {.val exchcd},",
+              "and {.val cfacpr} must be contained in",
+              "{.arg additional_columns} for {.arg adjust_volume = TRUE}."
+            )
+          )
+        }
+      }
+
       dsf_db <- tbl(con, I("crsp.dsf")) |>
         filter(between(date, start_date, end_date))
       msenames_db <- tbl(con, I("crsp.msenames"))
@@ -309,10 +410,10 @@ download_data_wrds_crsp <- function(
         distinct(permno) |>
         pull()
 
-      factors_ff_3_daily <- download_data_factors_ff(
-        "factors_ff_3_daily",
-        start_date,
-        end_date
+      risk_free_daily <- download_data_risk_free(
+        start_date = start_date,
+        end_date = end_date,
+        frequency = "daily"
       )
 
       batches <- ceiling(length(permnos) / batch_size)
@@ -370,25 +471,65 @@ download_data_wrds_crsp <- function(
             filter(date <= dlstdt) |>
             select(-dlstdt)
 
-          crsp_daily_list[[j]] <- crsp_daily_sub |>
-            left_join(
-              factors_ff_3_daily |>
-                select(date, risk_free),
-              join_by(date)
-            ) |>
+          crsp_daily_sub <- crsp_daily_sub |>
+            left_join(risk_free_daily, join_by(date)) |>
             mutate(
-              ret_excess = ret - risk_free,
-              ret_excess = pmax(ret_excess, -1)
+              ret_excess = ret - risk_free
             ) |>
             select(-risk_free)
+
+          if (isTRUE(adjust_volume)) {
+            # Gao and Ritter (2010) volume adjustment for NASDAQ trading volume
+            gr_date_1 <- as.Date("2001-02-01") # nolint: object_usage_linter
+            gr_date_2 <- as.Date("2002-01-01") # nolint: object_usage_linter
+            gr_date_3 <- as.Date("2004-01-01") # nolint: object_usage_linter
+
+            crsp_daily_sub <- crsp_daily_sub |>
+              mutate(
+                vol = na_if(vol, -99),
+                prc = na_if(prc, 0),
+                prc_adj = abs(prc) / cfacpr,
+                prc_adj = if_else(is.infinite(prc_adj), NA_real_, prc_adj)
+              ) |>
+              mutate(
+                vol_adj = case_when(
+                  exchcd == 3 & date < gr_date_1 ~ vol / 2.0,
+                  exchcd == 3 & date >= gr_date_1 & date < gr_date_2 ~ vol /
+                    1.8,
+                  exchcd == 3 & date >= gr_date_2 & date < gr_date_3 ~ vol /
+                    1.6,
+                  exchcd == 3 & date >= gr_date_3 ~ vol / 1.0,
+                  .default = vol
+                )
+              )
+          }
+
+          crsp_daily_list[[j]] <- crsp_daily_sub
         }
         cli::cli_progress_update()
       }
 
-      disconnection_connection(con)
+      disconnect_connection(con)
 
       processed_data <- bind_rows(crsp_daily_list)
     } else {
+      if (isTRUE(adjust_volume)) {
+        if (
+          !all(
+            c("dlyprc", "dlyvol", "dlyfacprc", "primaryexch") %in%
+              additional_columns
+          )
+        ) {
+          cli::cli_abort(
+            paste(
+              "{.val dlyprc}, {.val dlyvol}, {.val primaryexch},",
+              "and {.val dlyfacprc} must be contained in",
+              "{.arg additional_columns} for {.arg adjust_volume = TRUE}."
+            )
+          )
+        }
+      }
+
       dsf_db <- tbl(con, I("crsp.dsf_v2")) |>
         filter(between(dlycaldt, start_date, end_date))
       stksecurityinfohist_db <- tbl(con, I("crsp.stksecurityinfohist"))
@@ -404,10 +545,10 @@ download_data_wrds_crsp <- function(
         distinct(permno) |>
         pull()
 
-      factors_ff_3_daily <- download_data_factors_ff(
-        "factors_ff_3_daily",
-        start_date,
-        end_date
+      risk_free_daily <- download_data_risk_free(
+        start_date = start_date,
+        end_date = end_date,
+        frequency = "daily"
       )
 
       batches <- ceiling(length(permnos) / batch_size)
@@ -453,26 +594,93 @@ download_data_wrds_crsp <- function(
           tidyr::drop_na(permno, date, ret)
 
         if (nrow(crsp_daily_sub) > 0) {
-          crsp_daily_list[[j]] <- crsp_daily_sub |>
-            left_join(
-              factors_ff_3_daily |>
-                select(date, risk_free),
-              join_by(date)
-            ) |>
+          crsp_daily_sub <- crsp_daily_sub |>
+            left_join(risk_free_daily, join_by(date)) |>
             mutate(
-              ret_excess = ret - risk_free,
-              ret_excess = pmax(ret_excess, -1)
+              ret_excess = ret - risk_free
             ) |>
             select(-risk_free)
+
+          if (isTRUE(adjust_volume)) {
+            crsp_daily_sub <- crsp_daily_sub |>
+              group_by(permno) |>
+              arrange(date) |>
+              mutate(
+                cfacpr = cumprod(dlyfacprc)
+              ) |>
+              ungroup()
+
+            gr_date_1 <- as.Date("2001-02-01")
+            gr_date_2 <- as.Date("2002-01-01")
+            gr_date_3 <- as.Date("2004-01-01")
+
+            crsp_daily_sub <- crsp_daily_sub |>
+              mutate(
+                vol = na_if(dlyvol, -99),
+                prc = na_if(dlyprc, 0),
+                prc_adj = abs(prc) / cfacpr,
+                prc_adj = if_else(is.infinite(prc_adj), NA_real_, prc_adj)
+              ) |>
+              mutate(
+                vol_adj = case_when(
+                  primaryexch == "Q" & date < gr_date_1 ~ vol / 2.0,
+                  primaryexch == "Q" &
+                    date >= gr_date_1 &
+                    date < gr_date_2 ~ vol /
+                    1.8,
+                  primaryexch == "Q" &
+                    date >= gr_date_2 &
+                    date < gr_date_3 ~ vol /
+                    1.6,
+                  primaryexch == "Q" & date >= gr_date_3 ~ vol / 1.0,
+                  .default = vol
+                )
+              ) |>
+              select(-c(dlyvol, dlyprc, dlyfacprc))
+          }
+
+          crsp_daily_list[[j]] <- crsp_daily_sub
         }
         cli::cli_progress_update()
       }
 
-      disconnection_connection(con)
+      disconnect_connection(con)
 
       processed_data <- bind_rows(crsp_daily_list)
     }
+  } else {
+    cli::cli_abort("Unsupported CRSP dataset: {.val {dataset}}")
+  }
+
+  if (isTRUE(add_ccm_links)) {
+    ccm_links <- download_data_wrds_ccm_links()
+
+    valid_links <- processed_data |>
+      inner_join(
+        ccm_links,
+        join_by(permno),
+        relationship = "many-to-many",
+        multiple = "all"
+      ) |>
+      filter(!is.na(gvkey) & (date >= linkdt & date <= linkenddt)) |>
+      select(permno, gvkey, date)
+
+    processed_data <- processed_data |>
+      left_join(valid_links, join_by(permno, date))
   }
 
   processed_data
+}
+
+#' Check if WRDS CRSP dataset is supported
+#' @noRd
+check_supported_dataset_wrds_crsp <- function(dataset) {
+  supported_datasets <- c("crsp_monthly", "crsp_daily")
+
+  if (!dataset %in% supported_datasets) {
+    cli::cli_abort(c(
+      "Unsupported CRSP dataset: {.val {dataset}}",
+      "i" = "Supported datasets: {.val {supported_datasets}}"
+    ))
+  }
 }

@@ -7,22 +7,23 @@
 get_wrds_connection()
 }
 \value{
-An object of class \code{DBIConnection} representing the connection to the
-WRDS database. This object can be used with other DBI-compliant functions
-to interact with the database.
+An object of class \code{DBIConnection} representing the connection
+to the WRDS database. This object can be used with other DBI-compliant
+functions to interact with the database.
 }
 \description{
-This function establishes a connection to the Wharton Research Data Services
-(WRDS) database using the \code{RPostgres} package. It requires that the
-\code{RPostgres} package is installed and that valid WRDS credentials are set as
-environment variables.
+Establishes a connection to the Wharton Research Data Services (WRDS)
+database using the \code{RPostgres} package. It requires that the \code{RPostgres}
+package be installed and that valid WRDS credentials be set as environment
+variables.
 }
 \details{
-The function checks if the \code{RPostgres} package is installed before
-attempting to establish a connection. It uses the host, dbname, port, and
-sslmode as fixed parameters for the connection. Users must set their WRDS
-username and password as environment variables \code{WRDS_USER} and
-\code{WRDS_PASSWORD}, respectively, before using this function.
+The function checks if the \code{RPostgres} package is installed
+before attempting to establish a connection. It uses the host, dbname,
+port, and sslmode as fixed parameters for the connection. Users must
+set their WRDS username and password as environment variables
+\code{WRDS_USER} and \code{WRDS_PASSWORD}, respectively, before using this
+function.
 }
 \examples{
 \dontrun{
@@ -36,6 +37,18 @@ username and password as environment variables \code{WRDS_USER} and
 }
 }
 \seealso{
-\code{\link[RPostgres]{Postgres}}, \code{\link[DBI]{dbDisconnect}} for more
+\code{\link[RPostgres:Postgres]{RPostgres::Postgres()}}, \code{\link[DBI:dbDisconnect]{DBI::dbDisconnect()}} for more
 information on managing database connections.
+
+Other WRDS functions: 
+\code{\link{create_wrds_dummy_database}()},
+\code{\link{disconnect_connection}()},
+\code{\link{download_data_wrds}()},
+\code{\link{download_data_wrds_ccm_links}()},
+\code{\link{download_data_wrds_compustat}()},
+\code{\link{download_data_wrds_crsp}()},
+\code{\link{download_data_wrds_fisd}()},
+\code{\link{download_data_wrds_trace_enhanced}()},
+\code{\link{set_wrds_credentials}()}
 }
+\concept{WRDS functions}

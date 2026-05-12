@@ -1,0 +1,162 @@
+#' Compute a Rolling Value by Period
+#'
+#' @description `r lifecycle::badge('experimental')`
+#'
+#' Applies an arbitrary summary function over rolling time-period windows.
+#' Each window spans `periods` units of `period` (e.g., 12 months). Before
+#' calling `.f`, rows with any missing values are dropped from the window;
+#' if fewer than `min_obs` rows remain, the result is `NA_real_` instead.
+#'
+#' @param data A data frame with a date column of class `Date`, named according
+#'   to `data_options$date` (default `"date"`).
+#' @param .f A function applied to each window. Receives a data-frame slice
+#'   (complete cases only) and must return a single scalar value.
+#' @param period A string specifying the period for rolling windows
+#'   (e.g., `"month"`, `"quarter"`, `"year"`).
+#' @param periods Number of periods to include in the rolling window.
+#' @param min_obs Minimum number of non-missing rows required per window.
+#'   Defaults to `periods`.
+#' @param data_options A list of class `tidyfinance_data_options` (created via
+#'   [data_options()]) specifying column name mappings. The `date` element is
+#'   used to specify the date column. Uses [data_options()] default if `NULL`:
+#'   `"date" = "date"`.
+#'
+#' @returns A numeric vector aligned with the rows of `data`.
+#'
+#' @family rolling and lagging functions
+#' @export
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' # Rolling standard deviation
+#' set.seed(42)
+#' df <- tibble(
+#'   date = seq.Date(
+#'     from = as.Date("2020-01-01"),
+#'     by = "month",
+#'     length.out = 24
+#'   ),
+#'   value = rnorm(24)
+#' )
+#'
+#' df |>
+#'   mutate(
+#'     rolling_sd = compute_rolling_value(
+#'       pick(everything()),
+#'       .f = ~ sd(.x$value, na.rm = TRUE),
+#'       period = "month",
+#'       periods = 4,
+#'       min_obs = 2
+#'     )
+#'   )
+#'
+#' # Rolling last residual from a regression
+#' set.seed(42)
+#' df_reg <- tibble(
+#'   date = seq.Date(
+#'     from = as.Date("2020-01-01"),
+#'     by = "month",
+#'     length.out = 60
+#'   ),
+#'   ret_excess = rnorm(60, 0, 0.05),
+#'   mkt_excess = rnorm(60, 0, 0.04),
+#'   smb = rnorm(60, 0, 0.03),
+#'   hml = rnorm(60, 0, 0.03)
+#' )
+#'
+#' df_reg |>
+#'   mutate(
+#'     residual = compute_rolling_value(
+#'       pick(everything()),
+#'       .f = \(x) {
+#'         last(lm(ret_excess ~ mkt_excess + smb + hml, data = x)$residuals)
+#'       },
+#'       period = "month",
+#'       periods = 24,
+#'       min_obs = 12
+#'     )
+#'   )
+#'
+#' # Rolling cumulative-return-to-SD ratio
+#' set.seed(42)
+#' df_resid <- tibble(
+#'   date = seq.Date(
+#'     from = as.Date("2020-01-01"),
+#'     by = "month",
+#'     length.out = 24
+#'   ),
+#'   int_roll_residual = rnorm(24, 0, 0.02)
+#' )
+#'
+#' df_resid |>
+#'   mutate(
+#'     return_to_sd = compute_rolling_value(
+#'       pick(everything()),
+#'       .f = ~ (prod(1 + .x$int_roll_residual) - 1) / sd(.x$int_roll_residual),
+#'       period = "month",
+#'       periods = 12,
+#'       min_obs = 12
+#'     )
+#'   )
+#'
+compute_rolling_value <- function(
+  data,
+  .f,
+  period = "month",
+  periods = 12,
+  min_obs = periods,
+  data_options = NULL
+) {
+  if (is.null(data_options)) {
+    data_options <- data_options()
+  }
+  date_col <- data_options$date
+
+  if (!is.character(date_col) || length(date_col) != 1 || is.na(date_col)) {
+    cli::cli_abort(
+      paste(
+        "{.field date} in {.arg data_options} must be a single non-missing",
+        "string, not {.obj_type_friendly {date_col}}."
+      )
+    )
+  }
+
+  if (!date_col %in% names(data)) {
+    cli::cli_abort("{.arg data} must contain a {.field {date_col}} column.")
+  }
+  if (!inherits(data[[date_col]], "Date")) {
+    cli::cli_abort(
+      paste(
+        "The {.field {date_col}} column must be of class {.cls Date},",
+        "not {.cls {class(data[[date_col]])}}."
+      )
+    )
+  }
+  if (!is.character(period) || length(period) != 1) {
+    cli::cli_abort(
+      paste(
+        "{.arg period} must be a single string,",
+        "not {.obj_type_friendly {period}}."
+      )
+    )
+  }
+
+  .f <- rlang::as_function(.f)
+
+  slider::slide_period_vec(
+    .x = data,
+    .i = data[[date_col]],
+    .period = period,
+    .f = function(.x) {
+      complete <- tidyr::drop_na(.x)
+      if (nrow(complete) < min_obs) {
+        NA_real_
+      } else {
+        .f(complete)
+      }
+    },
+    .before = periods - 1,
+    .complete = FALSE
+  )
+}

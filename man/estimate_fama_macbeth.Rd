@@ -9,37 +9,59 @@ estimate_fama_macbeth(
   model,
   vcov = "newey-west",
   vcov_options = NULL,
-  data_options = NULL
+  data_options = NULL,
+  detail = FALSE
 )
 }
 \arguments{
-\item{data}{A data frame containing the data for the regression. It must include a column
-representing the time periods (defaults to \code{date}) and the variables specified in the \code{model}.}
+\item{data}{A data frame containing the data for the regression. It must
+include a column representing the time periods (defaults to \code{date}) and
+the variables specified in the \code{model}.}
 
-\item{model}{A formula representing the regression model to be estimated in each cross-section.}
+\item{model}{A character string describing the model to be estimated in
+each cross-section (e.g., \code{"ret_excess ~ beta + bm + log_mktcap"}).}
 
-\item{vcov}{A character string indicating the type of standard errors to compute. Options are
-\code{"iid"} for independent and identically distributed errors or \code{"newey-west"} for Newey-West
-standard errors. Default is \code{"newey-west"}.}
+\item{vcov}{A character string indicating the type of standard errors to
+compute. Options are \code{"iid"} for independent and identically distributed
+errors or \code{"newey-west"} for Newey-West standard errors. Default is
+\code{"newey-west"}.}
 
 \item{vcov_options}{A list of additional arguments to be passed to the
-\code{NeweyWest()} function when \code{vcov = "newey-west"}. These can include options
-such as \code{lag}, which specifies the number of lags to use in the Newey-West
-covariance matrix estimation, and \code{prewhite}, which indicates whether to
-apply a prewhitening transformation. Default is an empty list.}
+\code{NeweyWest()} function when \code{vcov = "newey-west"}. These can include
+options such as \code{lag}, which specifies the number of lags to use in the
+Newey-West covariance matrix estimation, and \code{prewhite}, which indicates
+whether to apply a prewhitening transformation. Default is an empty list.}
 
-\item{data_options}{A named list of \link{data_options} with characters, indicating the column
-names required to run this function. The required column names identify dates. Defaults to
-\code{date = date}.}
+\item{data_options}{A list of class \code{tidyfinance_data_options} (created via
+\code{\link[=data_options]{data_options()}}) specifying column name mappings. The \code{date} element is
+used to specify the date column. Uses \code{\link[=data_options]{data_options()}} default if \code{NULL}:
+\code{"date" = "date"}.}
+
+\item{detail}{A logical value indicating whether to return additional
+summary statistics. If \code{FALSE} (default), the function returns only the
+coefficient estimates. If \code{TRUE}, it returns a list with two elements:
+\code{coefficients} (the usual estimates table) and \code{summary_statistics} (a
+one-row tibble with the average cross-sectional R-squared and the average
+number of observations per cross-section).}
 }
 \value{
-A data frame with the estimated risk premiums, the number of observations, standard
-errors, and t-statistics for each factor in the model.
+If \code{detail = FALSE} (default), a tibble with columns
+\code{factor}, \code{risk_premium}, \code{n} (number of time periods),
+\code{standard_error}, and \code{t_statistic}.
+
+If \code{detail = TRUE}, a named list with two elements:
+\describe{
+\item{coefficients}{The same tibble described above.}
+\item{summary_statistics}{A one-row tibble with \code{r_squared} (mean
+cross-sectional R-squared) and \code{n_obs} (mean cross-sectional
+observation count).}
+}
 }
 \description{
-This function estimates Fama-MacBeth regressions by first running cross-sectional regressions
-for each time period and then aggregating the results over time to obtain average risk premia
-and corresponding t-statistics.
+Estimates Fama-MacBeth regressions (Fama and MacBeth, 1973) by first running
+cross-sectional regressions for each time period and then aggregating the
+results over time to obtain average risk premia and corresponding
+t-statistics.
 }
 \examples{
 set.seed(1234)
@@ -55,9 +77,24 @@ data <- tibble::tibble(
 )
 
 estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap")
-estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap", vcov = "iid")
-estimate_fama_macbeth(data, "ret_excess ~ beta + bm + log_mktcap",
-                      vcov = "newey-west", vcov_options = list(lag = 6, prewhite = FALSE))
+estimate_fama_macbeth(
+  data,
+  "ret_excess ~ beta + bm + log_mktcap",
+  vcov = "iid"
+)
+estimate_fama_macbeth(
+  data,
+  "ret_excess ~ beta + bm + log_mktcap",
+  vcov = "newey-west",
+  vcov_options = list(lag = 6, prewhite = FALSE)
+)
+
+# Return detailed output including R-squared and observation counts
+estimate_fama_macbeth(
+  data,
+  "ret_excess ~ beta + bm + log_mktcap",
+  detail = TRUE
+)
 
 # Use different column name for date
 data |>
@@ -68,3 +105,19 @@ data |>
  )
 
 }
+\references{
+Fama, E. F., & MacBeth, J. D. (1973). Risk, return, and equilibrium:
+Empirical tests. \emph{Journal of Political Economy}, 81(3), 607-636.
+\doi{10.1086/260061}
+
+Newey, W. K., & West, K. D. (1987). A simple, positive semi-definite,
+heteroskedasticity and autocorrelation consistent covariance matrix.
+\emph{Econometrica}, 55(3), 703-708.
+\doi{10.2307/1913610}
+}
+\seealso{
+Other estimation functions: 
+\code{\link{estimate_betas}()},
+\code{\link{estimate_model}()}
+}
+\concept{estimation functions}

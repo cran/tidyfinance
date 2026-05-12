@@ -1,43 +1,93 @@
 #' Download Data from WRDS Compustat
 #'
-#' This function downloads financial data from the WRDS Compustat database for a
-#' given type of financial data, start date, and end date. It filters the data
-#' according to industry format, data format, and consolidation level, and
-#' returns the most current data for each reporting period. Additionally, the
-#' annual data also includes the calculated calculates book equity (be),
-#' operating profitability (op), and investment (inv) for each company.
+#' Downloads financial data from the WRDS Compustat database for a given
+#' dataset, start date, and end date. It filters the data according to industry
+#' format, data format, and consolidation level, and returns the most current
+#' data for each reporting period. Additionally, the annual data also includes
+#' the calculated book equity (be), operating profitability (op), and
+#' investment (inv) for each company following Fama & French (1993, 2015), as
+#' well as income before extraordinary items (ib).
 #'
-#' @param type The type of financial data to download.
-#' @param start_date Optional. A character string or Date object in "YYYY-MM-DD" format
-#'   specifying the start date for the data. If not provided, a subset of the dataset is returned.
-#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD" format
-#'   specifying the end date for the data. If not provided, a subset of the dataset is returned.
-#' @param additional_columns Additional columns from the Compustat table
-#'   as a character vector.
+#' @param dataset The dataset to download ("compustat_annual" or
+#'   "compustat_quarterly").
+#' @param start_date Optional. A character string or Date object in
+#'   "YYYY-MM-DD" format specifying the start date for the data. If not
+#'   provided, a subset of the dataset is returned.
+#' @param end_date Optional. A character string or Date object in "YYYY-MM-DD"
+#'   format specifying the end date for the data. If not provided, a subset of
+#'   the dataset is returned.
+#' @param type `r lifecycle::badge("deprecated")` Use `dataset` instead.
+#' @param additional_columns Additional columns from the Compustat table as a
+#'   character vector.
+#' @param only_us A logical indicating whether only US firms should be returned.
+#' @returns A data frame with financial data for the specified period,
+#'   including variables for book equity (be), operating profitability (op),
+#'   investment (inv), and others.
 #'
-#' @returns A data frame with financial data for the specified period, including
-#'   variables for book equity (be), operating profitability (op), investment
-#'   (inv), and others.
+#' @references
+#'   Fama, E. F., & French, K. R. (1993). Common risk factors in the returns on
+#'   stocks and bonds. *Journal of Financial Economics*, 33(1), 3-56.
+#'   \doi{10.1016/0304-405X(93)90023-5}
 #'
+#'   Fama, E. F., & French, K. R. (2015). A five-factor asset pricing model.
+#'   *Journal of Financial Economics*, 116(1), 1-22.
+#'   \doi{10.1016/j.jfineco.2014.10.010}
+#'
+#' @family WRDS functions
 #' @export
+#'
 #' @examples
 #' \dontrun{
-#'   download_data_wrds_compustat("wrds_compustat_annual", "2020-01-01", "2020-12-31")
-#'   download_data_wrds_compustat("wrds_compustat_quarterly", "2020-01-01", "2020-12-31")
+#' download_data_wrds_compustat("compustat_annual", "2020-01-01", "2020-12-31")
+#' download_data_wrds_compustat(
+#'   "compustat_quarterly",
+#'   "2020-01-01",
+#'   "2020-12-31"
+#' )
 #'
 #'   # Add additional columns
-#'   download_data_wrds_compustat("wrds_compustat_annual", additional_columns = c("aodo", "aldo"))
+#' download_data_wrds_compustat(
+#'   "compustat_annual",
+#'   additional_columns = c("aodo", "aldo")
+#' )
 #' }
 download_data_wrds_compustat <- function(
-  type,
+  dataset = NULL,
   start_date = NULL,
   end_date = NULL,
-  additional_columns = NULL
+  type = deprecated(),
+  additional_columns = NULL,
+  only_us = FALSE
 ) {
-  rlang::check_installed(
-    "dbplyr",
-    reason = paste0("to download type ", type, ".")
-  )
+  # Handle explicit type argument
+  if (lifecycle::is_present(type)) {
+    lifecycle::deprecate_warn(
+      when = "0.5.0",
+      what = "download_data_wrds_compustat(type)",
+      details = "Use the `dataset` argument instead."
+    )
+    dataset <- sub("^wrds_", "", type)
+  }
+
+  # Handle legacy type passed as dataset argument
+  if (!is.null(dataset) && is_legacy_type_wrds(dataset)) {
+    lifecycle::deprecate_warn(
+      when = "0.5.0",
+      what = "download_data_wrds_compustat(type)",
+      details = paste0(
+        "The `type` argument is deprecated. ",
+        "Use `dataset` instead (e.g., 'compustat_annual' instead of",
+        "'wrds_compustat_annual')."
+      )
+    )
+    dataset <- sub("^wrds_", "", dataset)
+  }
+
+  if (is.null(dataset)) {
+    cli::cli_abort("Argument {.arg dataset} is required.")
+  }
+
+  check_supported_dataset_wrds_compustat(dataset)
 
   dates <- validate_dates(start_date, end_date, use_default_range = TRUE)
   start_date <- dates$start_date
@@ -45,8 +95,11 @@ download_data_wrds_compustat <- function(
 
   con <- get_wrds_connection()
 
-  if (grepl("compustat_annual", type, fixed = TRUE)) {
+  if (dataset == "compustat_annual") {
     funda_db <- tbl(con, I("comp.funda"))
+
+    has_pi <- "pi" %in% additional_columns
+    additional_columns_safe <- setdiff(additional_columns, "pi")
 
     compustat <- funda_db |>
       filter(
@@ -74,18 +127,24 @@ download_data_wrds_compustat <- function(
         cogs,
         xint,
         xsga,
-        all_of(additional_columns)
+        ib,
+        curcd,
+        all_of(additional_columns_safe)
       ) |>
+      # nolint start
+      {
+        \(x) if (has_pi) mutate(x, pi = sql('"pi"')) else x
+      }() |>
+      # nolint end
       collect()
 
-    disconnection_connection(con)
+    disconnect_connection(con)
 
     compustat <- compustat |>
       mutate(
         be = coalesce(seq, ceq + pstk, at - lt) +
           coalesce(txditc, txdb + itcb, 0) -
           coalesce(pstkrv, pstkl, pstk, 0),
-        be = if_else(be <= 0, NA, be),
         op = (sale -
           coalesce(cogs, 0) -
           coalesce(xsga, 0) -
@@ -100,6 +159,11 @@ download_data_wrds_compustat <- function(
       ungroup() |>
       mutate(date = floor_date(datadate, "month"))
 
+    if (isTRUE(only_us)) {
+      compustat <- compustat |>
+        filter(.data$curcd == "USD")
+    }
+
     processed_data <- compustat |>
       left_join(
         compustat |>
@@ -112,9 +176,7 @@ download_data_wrds_compustat <- function(
         inv = if_else(at_lag <= 0, NA, inv)
       ) |>
       select(gvkey, date, datadate, everything(), -year)
-  }
-
-  if (grepl("compustat_quarterly", type, fixed = TRUE)) {
+  } else if (dataset == "compustat_quarterly") {
     fundq_db <- tbl(con, I("comp.fundq"))
 
     compustat <- fundq_db |>
@@ -132,11 +194,12 @@ download_data_wrds_compustat <- function(
         fyearq,
         atq,
         ceqq,
+        curcdq,
         all_of(additional_columns)
       ) |>
       collect()
 
-    disconnection_connection(con)
+    disconnect_connection(con)
 
     compustat <- compustat |>
       tidyr::drop_na(gvkey, datadate, fyearq, fqtr) |>
@@ -151,9 +214,29 @@ download_data_wrds_compustat <- function(
       ungroup() |>
       filter(if_else(is.na(rdq), TRUE, date < rdq))
 
+    if (isTRUE(only_us)) {
+      compustat <- compustat |>
+        filter(.data$curcdq == "USD")
+    }
+
     processed_data <- compustat |>
       select(gvkey, date, datadate, atq, ceqq, all_of(additional_columns))
+  } else {
+    cli::cli_abort("Unsupported Compustat dataset: {.val {dataset}}")
   }
 
   processed_data
+}
+
+#' Check if WRDS Compustat dataset is supported
+#' @noRd
+check_supported_dataset_wrds_compustat <- function(dataset) {
+  supported_datasets <- c("compustat_annual", "compustat_quarterly")
+
+  if (!dataset %in% supported_datasets) {
+    cli::cli_abort(c(
+      "Unsupported Compustat dataset: {.val {dataset}}",
+      "i" = "Supported datasets: {.val {supported_datasets}}"
+    ))
+  }
 }

@@ -14,19 +14,21 @@ factors_ff_3_monthly <- download_data("factors_ff_3_monthly")
 factors_ff_3_monthly
 
 ## -----------------------------------------------------------------------------
-factors_ff_3_monthly |> 
-  select(date) |> 
-  mutate(date_lag3 = date %m-% months(3),
-         date_difference = interval(date_lag3, date) %/% months(1))
+factors_ff_3_monthly |>
+  select(date) |>
+  mutate(
+    date_lag3 = date %m-% months(3),
+    date_difference = interval(date_lag3, date) %/% months(1)
+  )
 
 ## -----------------------------------------------------------------------------
 factors_ff_3_daily <- download_data("factors_ff_3_daily")
 factors_ff_3_daily
 
 ## -----------------------------------------------------------------------------
-factors_ff_3_daily |> 
-  select(date) |> 
-  mutate(date_difference = interval(lag(date), date) %/% days(1)) 
+factors_ff_3_daily |>
+  select(date) |>
+  mutate(date_difference = interval(lag(date), date) %/% days(1))
 
 ## -----------------------------------------------------------------------------
 # crsp_daily <- download_data("wrds_crsp_daily")
@@ -45,17 +47,14 @@ factors_ff_3_daily |>
 
 ## -----------------------------------------------------------------------------
 # compustat_annual |>
-#   mutate(year = year(date),
-#          month = month(date)) |>
+#   mutate(year = year(date), month = month(date)) |>
 #   select(gvkey, date, datadate, year, month)
 
 ## -----------------------------------------------------------------------------
 # compustat_quarterly <- download_data("wrds_compustat_quarterly")
 # compustat_quarterly |>
 #   select(gvkey, date, datadate) |>
-#   mutate(year = year(date),
-#          month = month(date),
-#          quarter = quarter(date))
+#   mutate(year = year(date), month = month(date), quarter = quarter(date))
 
 ## -----------------------------------------------------------------------------
 # crsp_monthly |>
@@ -77,7 +76,8 @@ factors_ff_3_daily |>
 ## -----------------------------------------------------------------------------
 # crsp_monthly |>
 #   left_join(
-#     compustat_annual, join_by(gvkey, date)
+#     compustat_annual,
+#     join_by(gvkey, date)
 #   )
 
 ## -----------------------------------------------------------------------------

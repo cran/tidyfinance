@@ -7,46 +7,69 @@
 breakpoint_options(
   n_portfolios = NULL,
   percentiles = NULL,
-  breakpoint_exchanges = NULL,
+  breakpoints_exchanges = NULL,
   smooth_bunching = FALSE,
+  breakpoints_min_size_threshold = NULL,
   ...
 )
 }
 \arguments{
-\item{n_portfolios}{Integer, optional. The number of portfolios to create. Must be a
-positive integer. If not provided, defaults to \code{NULL}.}
+\item{n_portfolios}{Integer, optional. The number of portfolios to create.
+Must be a positive integer. If not provided, defaults to \code{NULL}.}
 
-\item{percentiles}{Numeric vector, optional. A vector of percentile thresholds for
-defining breakpoints. Each value should be between 0 and 1. If not provided, defaults
-to \code{NULL}.}
+\item{percentiles}{Numeric vector, optional. A vector of percentile
+thresholds for defining breakpoints. Each value must be between 0 and 1.
+If not provided, defaults to \code{NULL}.}
 
-\item{breakpoint_exchanges}{Character, optional. A non-empty string specifying the
-exchange for which the breakpoints apply. If not provided, defaults to \code{NULL}.}
+\item{breakpoints_exchanges}{Character vector, optional. A non-empty vector
+specifying the exchange from which to compute the breakpoints. If not
+provided, defaults to \code{NULL}.}
 
-\item{smooth_bunching}{Logical, optional. Indicates whether smooth bunching should
-be applied. Defaults to \code{FALSE}.}
+\item{smooth_bunching}{Logical, optional. Indicates whether smooth bunching
+should be applied. Defaults to \code{FALSE}.}
 
-\item{...}{Additional optional arguments. These will be captured in the resulting
-structure as a list.}
+\item{breakpoints_min_size_threshold}{Numeric, optional. When set to a value
+between 0 and 1, stocks with market capitalization below this quantile are
+excluded from breakpoint computation. The quantile is computed among
+\code{breakpoints_exchanges} stocks if specified, otherwise among all stocks.
+Requires a market capitalization column in the data (see
+\code{\link[=data_options]{data_options()}}). Defaults to \code{NULL} (no size filtering).}
+
+\item{...}{Additional optional arguments. These will be captured in the
+resulting structure as a list.}
 }
 \value{
-A list of class \code{"tidyfinance_breakpoint_options"} containing the provided
-breakpoint options, including any additional arguments passed via \code{...}.
+A list of class \code{"tidyfinance_breakpoint_options"} containing the
+provided breakpoint options, including any additional arguments passed
+via \code{...}.
 }
 \description{
-This function generates a structured list of options for defining breakpoints in
-portfolio sorting. It includes parameters for the number of portfolios, percentile
-thresholds, exchange-specific breakpoints, and smooth bunching, along with additional
-optional parameters.
+Generates a structured list of options for defining breakpoints in
+portfolio sorting. It includes parameters for the number of portfolios,
+percentile thresholds, exchange-specific breakpoints, and smooth bunching,
+along with additional optional parameters.
 }
 \examples{
 breakpoint_options(
   n_portfolios = 5,
   percentiles = c(0.2, 0.4, 0.6, 0.8),
-  breakpoint_exchanges = "NYSE",
+  breakpoints_exchanges = "NYSE",
   smooth_bunching = TRUE,
   custom_threshold = 0.5,
   another_option = "example"
 )
 
 }
+\seealso{
+Other portfolio functions: 
+\code{\link{assign_portfolio}()},
+\code{\link{compute_breakpoints}()},
+\code{\link{compute_long_short_returns}()},
+\code{\link{compute_portfolio_returns}()},
+\code{\link{data_options}()},
+\code{\link{filter_options}()},
+\code{\link{filter_sorting_data}()},
+\code{\link{implement_portfolio_sort}()},
+\code{\link{portfolio_sort_options}()}
+}
+\concept{portfolio functions}

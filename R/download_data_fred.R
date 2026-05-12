@@ -1,28 +1,36 @@
 #' Download and Process Data from FRED
 #'
-#' This function downloads a specified data series from the Federal Reserve Economic Data (FRED)
-#' website, processes the data, and returns it as a tibble.
+#' Downloads a specified data series from the Federal Reserve Economic Data
+#' (FRED) website, processes the data, and returns it as a tibble.
 #'
-#' @param series A character vector specifying the FRED series ID to download.
-#' @param start_date The start date for filtering the data, in "YYYY-MM-DD" format.
-#' @param end_date The end date for filtering the data, in "YYYY-MM-DD" format.
+#' @details
+#' Constructs the URL based on the provided FRED series ID, performs an HTTP
+#' GET request to download the data in CSV format, and processes it to a tidy
+#' tibble format. The resulting tibble includes the date, value, and the series
+#' ID.
 #'
-#' @return A tibble containing the processed data with three columns:
+#' This approach is inspired by `quantmod::getSymbolsFRED()` which uses a
+#' different wrapper around the same FRED download data site. If you want to
+#' systematically download FRED data via API, please consider using the `fredr`
+#' package.
+#'
+#' @param series A character vector specifying the FRED series ID(s) to
+#'   download.
+#' @param start_date Optional. A character string or Date object in
+#'   "YYYY-MM-DD" format specifying the start date for the data. If not
+#'   provided, the full dataset is returned.
+#' @param end_date Optional. A character string or Date object in
+#'   "YYYY-MM-DD" format specifying the end date for the data. If not
+#'   provided, the full dataset is returned.
+#'
+#' @returns A tibble containing the processed data with three columns:
 #' \describe{
 #'   \item{date}{The date corresponding to the data point.}
 #'   \item{value}{The value of the data series at that date.}
 #'   \item{series}{The FRED series ID corresponding to the data.}
 #' }
 #'
-#' @details
-#' This function constructs the URL based on the provided FRED series ID, performs an HTTP GET
-#' request to download the data in CSV format, and processes it to a tidy tibble format. The
-#' resulting tibble includes the date, value, and the series ID.
-#'
-#' This approach is inspired by `quantmod::getSymbolsFRED()` which uses a different wrapper around
-#' the same FRED download data site. If you want to systematically download FRED data via API,
-#' please consider using `fredr` package.
-#'
+#' @family download functions
 #' @export
 #'
 #' @examples
@@ -32,8 +40,6 @@
 #' }
 #'
 download_data_fred <- function(series, start_date = NULL, end_date = NULL) {
-  rlang::check_installed("httr2", reason = "to download data from FRED.")
-
   dates <- validate_dates(start_date, end_date)
   start_date <- dates$start_date
   end_date <- dates$end_date
@@ -47,17 +53,16 @@ download_data_fred <- function(series, start_date = NULL, end_date = NULL) {
   )
   for (j in seq_along(series)) {
     url <- paste0(
-      "https://fred.stlouisfed.org/graph/fredgraph.csv?id=", series[j]
+      "https://fred.stlouisfed.org/graph/fredgraph.csv?id=",
+      series[j]
     )
 
-    user_agent <- get_random_user_agent()
-
     response <- handle_download_error(
-      function()
+      function() {
         httr2::request(url) |>
           httr2::req_error(is_error = \(resp) FALSE) |>
-          httr2::req_user_agent(user_agent) |>
-          httr2::req_perform(),
+          httr2::req_perform()
+      },
       fallback = NULL
     )
 
@@ -70,14 +75,17 @@ download_data_fred <- function(series, start_date = NULL, end_date = NULL) {
 
         fred_processed[[j]] <- fred_raw |>
           mutate(
-            date = as.Date(observation_date),
+            date = as.Date(.data$observation_date),
             value = as.numeric(.data[[series[j]]]),
             series = series[j],
             .keep = "none"
           )
       } else {
         cli::cli_warn(
-          "Failed to retrieve data for series {series[j]} with status code {response$status_code}."
+          paste(
+            "Failed to retrieve data for series {series[j]}",
+            "with status code {response$status_code}."
+          )
         )
         fred_processed[[j]] <- tibble(
           date = Date(),
@@ -103,5 +111,5 @@ download_data_fred <- function(series, start_date = NULL, end_date = NULL) {
       filter(date >= start_date & date <= end_date)
   }
 
-  return(fred_processed)
+  fred_processed
 }

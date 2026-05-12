@@ -10,18 +10,36 @@ list_supported_indexes()
 A tibble with three columns:
 \describe{
 \item{index}{The name of the financial index (e.g., "DAX", "S&P 500").}
-\item{url}{The URL to the CSV file containing the holdings data for the index.}
+\item{url}{The URL to the CSV file containing the holdings data for the
+index.}
 \item{skip}{The number of lines to skip when reading the CSV file.}
 }
 }
 \description{
-This function returns a tibble containing information about supported financial indexes.
-Each index is associated with a URL that points to a CSV file containing the holdings of the index.
-Additionally, each index has a corresponding \code{skip} value, which indicates the number of lines
-to skip when reading the CSV file.
+Returns a tibble containing information about supported financial indexes.
+Each index is associated with a URL that points to a CSV file containing the
+holdings of the index. Additionally, each index has a corresponding \code{skip}
+value, which indicates the number of lines to skip when reading the CSV file.
 }
 \examples{
 supported_indexes <- list_supported_indexes()
 print(supported_indexes)
 
 }
+\seealso{
+Other utility functions: 
+\code{\link{create_summary_statistics}()},
+\code{\link{get_available_huggingface_files}()},
+\code{\link{list_supported_types}()},
+\code{\link{list_supported_types_ff}()},
+\code{\link{list_supported_types_ff_legacy}()},
+\code{\link{list_supported_types_macro_predictors}()},
+\code{\link{list_supported_types_other}()},
+\code{\link{list_supported_types_wrds}()},
+\code{\link{list_tidy_finance_chapters}()},
+\code{\link{open_tidy_finance_website}()},
+\code{\link{trim}()},
+\code{\link{validate_dates}()},
+\code{\link{winsorize}()}
+}
+\concept{utility functions}

@@ -13,10 +13,27 @@ chapters in Tidy Finance with R.
 }
 \description{
 Returns a character vector containing the names of the chapters available in
-the Tidy Finance resource. This function provides a quick reference to the
+the Tidy Finance resource. It provides a quick reference to the
 various topics covered.
 }
 \examples{
 list_tidy_finance_chapters()
 
 }
+\seealso{
+Other utility functions: 
+\code{\link{create_summary_statistics}()},
+\code{\link{get_available_huggingface_files}()},
+\code{\link{list_supported_indexes}()},
+\code{\link{list_supported_types}()},
+\code{\link{list_supported_types_ff}()},
+\code{\link{list_supported_types_ff_legacy}()},
+\code{\link{list_supported_types_macro_predictors}()},
+\code{\link{list_supported_types_other}()},
+\code{\link{list_supported_types_wrds}()},
+\code{\link{open_tidy_finance_website}()},
+\code{\link{trim}()},
+\code{\link{validate_dates}()},
+\code{\link{winsorize}()}
+}
+\concept{utility functions}

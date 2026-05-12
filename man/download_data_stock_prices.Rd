@@ -7,21 +7,24 @@
 download_data_stock_prices(symbols, start_date = NULL, end_date = NULL)
 }
 \arguments{
-\item{symbols}{A character vector of stock symbols to download data for. At least one
-symbol must be provided.}
+\item{symbols}{A character vector of stock symbols to download data for. At
+least one symbol must be provided.}
 
-\item{start_date}{Optional. A character string or Date object in "YYYY-MM-DD" format
-specifying the start date for the data. If not provided, a subset of the dataset is returned.}
+\item{start_date}{Optional. A character string or Date object in "YYYY-MM-DD"
+format specifying the start date for the data. If not provided, a one-year
+subset of the dataset is returned (see \code{\link[=validate_dates]{validate_dates()}}).}
 
-\item{end_date}{Optional. A character string or Date object in "YYYY-MM-DD" format
-specifying the end date for the data. If not provided, a subset of the dataset is returned.}
+\item{end_date}{Optional. A character string or Date object in "YYYY-MM-DD"
+format specifying the end date for the data. If not provided, a one-year
+subset of the dataset is returned (see \code{\link[=validate_dates]{validate_dates()}}).}
 }
 \value{
 A tibble containing the downloaded stock data with columns: symbol,
 date, volume, open, low, high, close, and adjusted_close.
 }
 \description{
-Downloads historical stock data from Yahoo Finance for given symbols and date range.
+Downloads historical stock data from Yahoo Finance for given symbols and date
+range.
 }
 \examples{
 \donttest{
@@ -29,3 +32,16 @@ Downloads historical stock data from Yahoo Finance for given symbols and date ra
   download_data_stock_prices("GOOGL", "2021-01-01", "2022-01-01" )
 }
 }
+\seealso{
+Other download functions: 
+\code{\link{download_data}()},
+\code{\link{download_data_constituents}()},
+\code{\link{download_data_factors_ff}()},
+\code{\link{download_data_factors_q}()},
+\code{\link{download_data_fred}()},
+\code{\link{download_data_huggingface}()},
+\code{\link{download_data_macro_predictors}()},
+\code{\link{download_data_osap}()},
+\code{\link{download_data_risk_free}()}
+}
+\concept{download functions}

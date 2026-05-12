@@ -2,14 +2,14 @@
 #'
 #' @description `r lifecycle::badge('experimental')`
 #'
-#'   This function assigns data points to portfolios based on a specified
-#'   sorting variable and the selected function to compute breakpoints. Users
-#'   can specify a function to compute breakpoints. The function must take
-#'   `data` and `sorting_variable` as the first two arguments. Additional
-#'   arguments are passed with a named list \link{breakpoint_options}. The
-#'   function needs to return an ascending vector of breakpoints. By default,
-#'   breakpoints are computed with \link{compute_breakpoints}. The default
-#'   column names can be modified using \link{data_options}.
+#' Assigns data points to portfolios based on a specified sorting variable and
+#' the selected function to compute breakpoints. Users can specify a function
+#' to compute breakpoints. The function must take `data` and
+#' `sorting_variable` as the first two arguments. Additional arguments are
+#' passed with a named list [breakpoint_options()]. The function needs to
+#' return an ascending vector of breakpoints. By default, breakpoints are
+#' computed with [compute_breakpoints()]. The default column names can be
+#' modified using [data_options()].
 #'
 #' @param data A data frame containing the dataset for portfolio assignment.
 #' @param sorting_variable A string specifying the column name in `data` to be
@@ -17,17 +17,24 @@
 #'   breakpoints.
 #' @param breakpoint_options An optional named list of arguments passed to
 #'   `breakpoint_function`.
-#' @param breakpoint_function A function to compute breakpoints. The default is
-#'   set to \link{compute_breakpoints}.
-#' @param data_options A named list of \link{data_options} with characters,
-#'  indicating the column names required to run this function. The required
-#'  column names identify dates.  Defaults to `date = date` and `id = permno`.
+#' @param breakpoint_function A function to compute breakpoints. The default
+#'   is set to [compute_breakpoints()].
+#' @param data_options A list of class `tidyfinance_data_options` (created via
+#'   [data_options()]) specifying column name mappings. Passed through to
+#'   `breakpoint_function`. When using the default [compute_breakpoints()],
+#'   the `exchange` element is used to specify the exchange column, and
+#'   `mktcap_lag` is used to specify the market capitalization column. Uses
+#'   [data_options()] default if `NULL`: `"exchange" = "exchange"` and
+#'   `"mktcap_lag" = "mktcap_lag"`.
 #'
-#' @return A vector of portfolio assignments for each row in the input `data`.
+#' @returns A vector of integer portfolio assignments for each row in the
+#'   input `data`.
 #'
+#' @family portfolio functions
 #' @export
 #'
 #' @examples
+#' set.seed(42)
 #' data <- data.frame(
 #'   id = 1:100,
 #'   exchange = sample(c("NYSE", "NASDAQ"), 100, replace = TRUE),
@@ -37,8 +44,12 @@
 #' assign_portfolio(data, "market_cap", breakpoint_options(n_portfolios = 5))
 #'
 #' assign_portfolio(
-#'   data, "market_cap",
-#'   breakpoint_options(percentiles = c(0.2, 0.4, 0.6, 0.8), breakpoint_exchanges = c("NYSE"))
+#'   data,
+#'   "market_cap",
+#'   breakpoint_options(
+#'     percentiles = c(0.2, 0.4, 0.6, 0.8),
+#'     breakpoints_exchanges = c("NYSE")
+#'   )
 #' )
 #'
 assign_portfolio <- function(
@@ -48,12 +59,15 @@ assign_portfolio <- function(
   breakpoint_function = compute_breakpoints,
   data_options = NULL
 ) {
-  # Exit condition for identical sorting variables
-  if (length(unique(data[[sorting_variable]])) == 1) {
+  x <- data[[sorting_variable]]
+  n <- length(x)
+
+  ux <- unique(x[!is.na(x)])
+  if (length(ux) <= 1L) {
     cli::cli_warn(
       "The sorting variable is constant and only one portfolio is returned."
     )
-    return(rep(1, nrow(data)))
+    return(rep.int(1L, n))
   }
 
   breakpoints <- breakpoint_function(
@@ -63,18 +77,25 @@ assign_portfolio <- function(
     data_options
   )
 
-  # Assign portfolios
-  portfolio_indices <- findInterval(
-    data[[sorting_variable]],
-    breakpoints,
-    all.inside = TRUE
-  )
-
-  if (length(unique(na.omit(portfolio_indices))) != (length(breakpoints) - 1)) {
+  if (anyNA(breakpoints)) {
     cli::cli_warn(
-      "The number of portfolios differs from the specified parameter due to clusters in the sorting variable."
+      "No portfolios were assigned due to missing breakpoints."
+    )
+    return(NA_integer_)
+  }
+
+  portfolio_indices <- findInterval(x, breakpoints, all.inside = TRUE)
+
+  n_expected <- length(breakpoints) - 1L
+  n_actual <- length(unique(na.omit(portfolio_indices)))
+  if (n_actual != n_expected) {
+    cli::cli_warn(
+      paste(
+        "The number of portfolios differs from the",
+        "specified parameter due to clusters in the sorting variable."
+      )
     )
   }
 
-  return(portfolio_indices)
+  portfolio_indices
 }

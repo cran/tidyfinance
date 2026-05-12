@@ -11,34 +11,61 @@ data_options(
   mktcap_lag = "mktcap_lag",
   ret_excess = "ret_excess",
   portfolio = "portfolio",
+  siccd = "siccd",
+  price = "prc_adj",
+  listing_age = "listing_age",
+  be = "be",
+  earnings = "ib",
   ...
 )
 }
 \arguments{
-\item{id}{A character string representing the identifier variable (e.g., "permno").}
+\item{id}{A character string representing the entity variable (defaults to
+\code{"permno"}).}
 
-\item{date}{A character string representing the date variable (e.g., "date").}
+\item{date}{A character string representing the date variable (defaults to
+\code{"date"}).}
 
-\item{exchange}{A character string representing the exchange variable (e.g., "exchange").}
+\item{exchange}{A character string representing the exchange variable
+(defaults to \code{"exchange"}).}
 
-\item{mktcap_lag}{A character string representing the market capitalization lag variable
-(e.g., "mktcap_lag").}
+\item{mktcap_lag}{A character string representing the market capitalization
+lag variable (defaults to \code{"mktcap_lag"}).}
 
 \item{ret_excess}{A character string representing the excess return variable
-(e.g., "ret_excess").}
+(defaults to \code{"ret_excess"}).}
 
-\item{portfolio}{A character string representing the portfolio variable (e.g., "portfolio").}
+\item{portfolio}{A character string representing the portfolio variable
+(defaults to \code{"portfolio"}).}
+
+\item{siccd}{A character string representing the Standard Industrial
+Classification code variable (defaults to \code{"siccd"}).}
+
+\item{price}{A character string representing the (adjusted) price variable
+(defaults to \code{"prc_adj"}).}
+
+\item{listing_age}{A character string representing the listing age variable
+(defaults to \code{"listing_age"}).}
+
+\item{be}{A character string representing the book equity variable (defaults
+to \code{"be"}).}
+
+\item{earnings}{A character string representing the earnings variable
+(defaults to \code{"ib"}, the Compustat income before extraordinary items
+column).}
 
 \item{...}{Additional arguments to be included in the data options list.}
 }
 \value{
-A list of class \code{tidyfinance_data_options} containing the specified data options.
+A list of class \code{tidyfinance_data_options} containing the specified
+data options.
 }
 \description{
-This function creates a list of data options used in financial data analysis,
-specifically for TidyFinance-related functions. It allows users to specify
-key parameters such as \code{id}, \code{date}, \code{exchange}, \code{mktcap_lag}, and \code{ret_excess}
-along with other additional options passed through \code{...}.
+Creates a list of data options of class \code{tidyfinance_data_options} used for
+TidyFinance-related functions. These options map the specific data variables
+to the TidyFinance naming conventions, allowing functions to flexibly work
+with different datasets by specifying the relevant column names. Additional
+options can be passed through \code{...}.
 }
 \examples{
 data_options(
@@ -48,3 +75,16 @@ data_options(
 )
 
 }
+\seealso{
+Other portfolio functions: 
+\code{\link{assign_portfolio}()},
+\code{\link{breakpoint_options}()},
+\code{\link{compute_breakpoints}()},
+\code{\link{compute_long_short_returns}()},
+\code{\link{compute_portfolio_returns}()},
+\code{\link{filter_options}()},
+\code{\link{filter_sorting_data}()},
+\code{\link{implement_portfolio_sort}()},
+\code{\link{portfolio_sort_options}()}
+}
+\concept{portfolio functions}

@@ -1,11 +1,11 @@
 #' Check if a Dataset Type is Supported
 #'
-#' This function checks if a given dataset type is supported by verifying
-#' against a list of all supported dataset types from different domains. If the
-#' specified type is not supported, it stops execution and returns an error
-#' message listing all supported types.
+#' Checks if a given dataset type is supported by verifying against a list of
+#' all supported dataset types from different domains. If the specified type is
+#' not supported, execution stops and an error message listing all supported
+#' types is returned.
 #'
-#' @param type The dataset type to check for support.
+#' @param type A character string specifying the dataset type to check.
 #'
 #' @returns Does not return a value; instead, it either passes silently if the
 #'   type is supported or stops execution with an error message if the type is
@@ -15,7 +15,10 @@ check_supported_type <- function(type) {
   supported_types_legacy <- list_supported_types_ff_legacy()$type
   if (!any(type %in% c(supported_types, supported_types_legacy))) {
     cli::cli_abort(
-      "Unsupported {.arg type} specified. Call the function {.fn list_supported_types} to get all supported types."
+      paste(
+        "Unsupported {.arg type} specified. Call the function",
+        "{.fn list_supported_types} to get all supported types."
+      )
     )
   }
 }

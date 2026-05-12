@@ -26,10 +26,20 @@ list_supported_types()
 # download_data("wrds_crsp_monthly", "2020-01-01", "2020-12-31")
 
 ## -----------------------------------------------------------------------------
-# download_data_wrds_crsp("wrds_crsp_monthly", "2020-01-01", "2020-12-31", additional_columns = "mthvol")
+# download_data_wrds_crsp(
+#   "wrds_crsp_monthly",
+#   "2020-01-01",
+#   "2020-12-31",
+#   additional_columns = "mthvol"
+# )
 
 ## -----------------------------------------------------------------------------
-# download_data_wrds_compustat("wrds_compustat_annual", "2000-01-01", "2020-12-31", additional_columns = c("acoxar", "amc", "aldo"))
+# download_data_wrds_compustat(
+#   "wrds_compustat_annual",
+#   "2000-01-01",
+#   "2020-12-31",
+#   additional_columns = c("acoxar", "amc", "aldo")
+# )
 
 ## -----------------------------------------------------------------------------
 list_tidy_finance_chapters()
@@ -64,7 +74,10 @@ data <- tibble(
 data |>
   mutate(
     portfolio = assign_portfolio(
-      pick(everything()), "market_cap", list(n_portfolios = 5, breakpoint_exchanges = "NYSE"))
+      pick(everything()),
+      "market_cap",
+      list(n_portfolios = 5, breakpoint_exchanges = "NYSE")
+    )
   )
 
 ## -----------------------------------------------------------------------------

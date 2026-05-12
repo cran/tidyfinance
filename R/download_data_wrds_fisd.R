@@ -12,24 +12,23 @@
 #' @param additional_columns Additional columns from the FISD table
 #'   as a character vector.
 #'
-#' @returns A data frame containing a subset of FISD data with fields related to
-#'   the bond's characteristics and issuer information. This includes complete
-#'   CUSIP, maturity date, offering amount, offering date, dated date, interest
-#'   frequency, coupon, last interest date, issue ID, issuer ID, SIC code of the
-#'   issuer.
+#' @returns A data frame containing a subset of FISD data with fields related
+#'   to the bond's characteristics and issuer information. This includes
+#'   complete CUSIP, maturity date, offering amount, offering date, dated date,
+#'   interest frequency, coupon, last interest date, issue ID, issuer ID, and
+#'   SIC code of the issuer.
 #'
+#' @family WRDS functions
 #' @export
+#'
 #' @examples
 #' \dontrun{
-#'   fisd <- download_data_wrds_fisd()
-#'   fisd_extended <- download_data_wrds_fisd(additional_columns = c("asset_backed", "defeased"))
+#' fisd <- download_data_wrds_fisd()
+#' fisd_extended <- download_data_wrds_fisd(
+#'   additional_columns = c("asset_backed", "defeased")
+#' )
 #' }
 download_data_wrds_fisd <- function(additional_columns = NULL) {
-  rlang::check_installed(
-    "dbplyr",
-    reason = "to download type fisdmergedissue."
-  )
-
   con <- get_wrds_connection()
 
   fisd_mergedissue_db <- tbl(con, I("fisd.fisd_mergedissue"))
@@ -87,7 +86,7 @@ download_data_wrds_fisd <- function(additional_columns = NULL) {
     select(issuer_id, sic_code) |>
     collect()
 
-  disconnection_connection(con)
+  disconnect_connection(con)
 
   fisd <- fisd |>
     inner_join(fisd_issuer, join_by(issuer_id))

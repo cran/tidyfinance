@@ -2,35 +2,45 @@
 % Please edit documentation in R/estimate_model.R
 \name{estimate_model}
 \alias{estimate_model}
-\title{Estimate Model Coefficients}
+\title{Estimate a Linear Model}
 \usage{
-estimate_model(data, model, min_obs = 1)
+estimate_model(data, model, min_obs = 1, output = "coefficients")
 }
 \arguments{
 \item{data}{A data frame containing the dependent variable and one or more
 independent variables.}
 
-\item{model}{A character that describes the model to estimate (e.g.
-\code{"ret_excess ~ mkt_excess + hmb + sml"}).}
+\item{model}{A character that describes the model to be estimated (e.g.,
+\code{"ret_excess ~ mkt_excess + hml + smb"}).}
 
 \item{min_obs}{The minimum number of observations required to estimate the
 model. Defaults to 1.}
+
+\item{output}{A character vector specifying what to return. Must contain one
+or more of \code{"coefficients"} (default), \code{"residuals"}, and \code{"tstats"}. If a
+single value is provided, the corresponding object is returned directly.
+If multiple values are provided, a named list is returned.}
 }
 \value{
-A data frame with a row for each coefficient and
-column names corresponding to the independent variables.
+If \code{output} contains a single value: a data frame of coefficients
+or t-statistics, or a numeric vector of residuals. If \code{output} contains
+multiple values: a named list with the requested elements. Coefficients
+and t-statistics are returned as data frames with column names
+corresponding to the model terms. Residuals are returned as a numeric
+vector of length \code{nrow(data)} with \code{NA} for rows with missing data or
+insufficient observations.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
-This function estimates the coefficients of a linear model specified by one
-or more independent variables. It checks for the presence of the specified
-independent variables in the dataset and whether the dataset has a sufficient
-number of observations. It returns the model's coefficients as either a
-numeric value (for a single independent variable) or a data frame (for
-multiple independent variables).
+Estimates a linear model specified by one or more independent
+variables. It checks for the presence of the specified independent variables
+in the dataset and whether the dataset has a sufficient number of
+observations. Depending on the \code{output} parameter, it returns the model's
+coefficients, t-statistics, residuals, or any combination in a named list.
 }
 \examples{
+set.seed(42)
 data <- data.frame(
   ret_excess = rnorm(100),
   mkt_excess = rnorm(100),
@@ -47,7 +57,25 @@ estimate_model(data, "ret_excess ~ mkt_excess + smb + hml")
 # Estimate model without intercept
 estimate_model(data, "ret_excess ~ mkt_excess - 1")
 
+# Calculate residuals
+estimate_model(data, "ret_excess ~ mkt_excess + smb + hml",
+  output = "residuals"
+)
+
+# Return t-statistics
+estimate_model(data, "ret_excess ~ mkt_excess + smb + hml",
+  output = "tstats"
+)
+
+# Return coefficients, t-statistics, and residuals
+estimate_model(data, "ret_excess ~ mkt_excess + smb + hml",
+  output = c("coefficients", "tstats", "residuals")
+)
+
 }
 \seealso{
-\code{\link[stats:lm]{stats::lm()}} for details on the underlying linear model fitting used.
+Other estimation functions: 
+\code{\link{estimate_betas}()},
+\code{\link{estimate_fama_macbeth}()}
 }
+\concept{estimation functions}

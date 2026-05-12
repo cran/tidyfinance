@@ -22,29 +22,35 @@ breakpoints.}
 \item{breakpoint_options}{An optional named list of arguments passed to
 \code{breakpoint_function}.}
 
-\item{breakpoint_function}{A function to compute breakpoints. The default is
-set to \link{compute_breakpoints}.}
+\item{breakpoint_function}{A function to compute breakpoints. The default
+is set to \code{\link[=compute_breakpoints]{compute_breakpoints()}}.}
 
-\item{data_options}{A named list of \link{data_options} with characters,
-indicating the column names required to run this function. The required
-column names identify dates.  Defaults to \code{date = date} and \code{id = permno}.}
+\item{data_options}{A list of class \code{tidyfinance_data_options} (created via
+\code{\link[=data_options]{data_options()}}) specifying column name mappings. Passed through to
+\code{breakpoint_function}. When using the default \code{\link[=compute_breakpoints]{compute_breakpoints()}},
+the \code{exchange} element is used to specify the exchange column, and
+\code{mktcap_lag} is used to specify the market capitalization column. Uses
+\code{\link[=data_options]{data_options()}} default if \code{NULL}: \code{"exchange" = "exchange"} and
+\code{"mktcap_lag" = "mktcap_lag"}.}
 }
 \value{
-A vector of portfolio assignments for each row in the input \code{data}.
+A vector of integer portfolio assignments for each row in the
+input \code{data}.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
-This function assigns data points to portfolios based on a specified
-sorting variable and the selected function to compute breakpoints. Users
-can specify a function to compute breakpoints. The function must take
-\code{data} and \code{sorting_variable} as the first two arguments. Additional
-arguments are passed with a named list \link{breakpoint_options}. The
-function needs to return an ascending vector of breakpoints. By default,
-breakpoints are computed with \link{compute_breakpoints}. The default
-column names can be modified using \link{data_options}.
+Assigns data points to portfolios based on a specified sorting variable and
+the selected function to compute breakpoints. Users can specify a function
+to compute breakpoints. The function must take \code{data} and
+\code{sorting_variable} as the first two arguments. Additional arguments are
+passed with a named list \code{\link[=breakpoint_options]{breakpoint_options()}}. The function needs to
+return an ascending vector of breakpoints. By default, breakpoints are
+computed with \code{\link[=compute_breakpoints]{compute_breakpoints()}}. The default column names can be
+modified using \code{\link[=data_options]{data_options()}}.
 }
 \examples{
+set.seed(42)
 data <- data.frame(
   id = 1:100,
   exchange = sample(c("NYSE", "NASDAQ"), 100, replace = TRUE),
@@ -54,8 +60,25 @@ data <- data.frame(
 assign_portfolio(data, "market_cap", breakpoint_options(n_portfolios = 5))
 
 assign_portfolio(
-  data, "market_cap",
-  breakpoint_options(percentiles = c(0.2, 0.4, 0.6, 0.8), breakpoint_exchanges = c("NYSE"))
+  data,
+  "market_cap",
+  breakpoint_options(
+    percentiles = c(0.2, 0.4, 0.6, 0.8),
+    breakpoints_exchanges = c("NYSE")
+  )
 )
 
 }
+\seealso{
+Other portfolio functions: 
+\code{\link{breakpoint_options}()},
+\code{\link{compute_breakpoints}()},
+\code{\link{compute_long_short_returns}()},
+\code{\link{compute_portfolio_returns}()},
+\code{\link{data_options}()},
+\code{\link{filter_options}()},
+\code{\link{filter_sorting_data}()},
+\code{\link{implement_portfolio_sort}()},
+\code{\link{portfolio_sort_options}()}
+}
+\concept{portfolio functions}

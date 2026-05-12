@@ -1,85 +1,123 @@
 #' Compute Portfolio Returns
 #'
-#' This function computes individual portfolio returns based on specified
-#' sorting variables and sorting methods. The portfolios can be rebalanced every
-#' period or on an annual frequency by specifying a rebalancing month, which is
-#' only applicable at a monthly return frequency. The function supports
-#' univariate and bivariate sorts, with the latter supporting dependent and
-#' independent sorting methods.
+#' Computes individual portfolio returns based on specified sorting variables
+#' and sorting methods. The portfolios can be rebalanced every period or on an
+#' annual frequency by specifying a rebalancing month, which is only applicable
+#' at a monthly return frequency. The function supports univariate and
+#' bivariate sorts, with the latter supporting dependent and independent
+#' sorting methods.
 #'
-#' @details The function checks for consistency in the provided arguments. For
-#'   univariate sorts, a single sorting variable and a corresponding number of
-#'   portfolios must be provided. For bivariate sorts, two sorting variables and
-#'   two corresponding numbers of portfolios (or percentiles) are required. The
-#'   sorting method determines how portfolios are assigned and returns are
-#'   computed. The function handles missing and extreme values appropriately
-#'   based on the specified sorting method and rebalancing frequency.
+#' @details
+#' The function checks for consistency in the provided arguments. For
+#' univariate sorts, a single sorting variable and a corresponding number of
+#' portfolios must be provided. For bivariate sorts, two sorting variables and
+#' two corresponding numbers of portfolios (or percentiles) are required. The
+#' sorting method determines how portfolios are assigned and how returns are
+#' computed. The function handles missing and extreme values appropriately
+#' based on the specified sorting method and rebalancing frequency.
 #'
-#' @param sorting_data A data frame containing the dataset for portfolio
-#'   assignment and return computation. Following CRSP naming conventions, the
-#'   panel data must identify individual stocks with `permno` and the time point
-#'   with `date`. It must contain columns for the sorting variables and
-#'   `ret_excess`. Additionally, `mktcap_lag` is needed for value-weighted
-#'   returns.
+#' @param data A data frame containing the dataset for portfolio assignment
+#'   and return computation. The panel data must include individual stock
+#'   identifiers and the time point. It must contain columns for the sorting
+#'   variables and excess returns. Additionally, lagged market capitalization
+#'   is required for value-weighted returns (see parameter `data_options`).
 #' @param sorting_variables A character vector specifying the column names in
-#'   `sorting_data` to be used for sorting and determining portfolio
-#'   assignments. For univariate sorts, provide a single variable. For bivariate
-#'   sorts, provide two variables, where the first string refers to the main
-#'   variable and the second string refers to the secondary ("control")
-#'   variable.
+#'   `data` to be used for sorting and determining portfolio assignments. For
+#'   univariate sorts, provide a single variable. For bivariate sorts, provide
+#'   two variables, where the first string refers to the main variable and the
+#'   second string refers to the secondary ("control") variable.
 #' @param sorting_method A string specifying the sorting method to be used.
 #'   Possible values are:
 #'   \itemize{
 #'     \item `"univariate"`: For a single sorting variable.
-#'     \item `"bivariate-dependent"`: For two sorting variables, where the main
-#'      sort depends on the secondary variable.
+#'     \item `"bivariate-dependent"`: For two sorting variables, where the
+#'       main sort depends on the secondary variable.
 #'     \item `"bivariate-independent"`: For two independent sorting variables.
 #'   }
 #'   For bivariate sorts, the portfolio returns are averaged over the
-#'   controlling sorting variable (i.e., the second sorting variable) and only
-#'   portfolio returns for the main sorting variable (given as the first element
-#'   of `sorting_variable`) are returned.
-#' @param rebalancing_month An integer between 1 and 12 specifying the month in
-#'   which to form portfolios that are held constant for one year. For example,
-#'   setting it to `7` creates portfolios in July that are held constant until
-#'   June of the following year. The default `NULL` corresponds to periodic
-#'   rebalancing.
-#' @param breakpoint_options_main A named list of \link{breakpoint_options} passed to
-#'   `breakpoint_function` for the main sorting variable.
-#' @param breakpoint_function_main A function to compute the main sorting
-#'   variable. The default is set to \link{compute_breakpoints}.
-#' @param breakpoint_options_secondary An optional named list of \link{breakpoint_options}
-#'   passed to `breakpoint_function` for the secondary sorting variable.
-#' @param breakpoint_function_secondary A function to compute the secondary
-#'   sorting variable. The default is set to \link{compute_breakpoints}.
+#'   controlling sorting variable (i.e., the second sorting variable), and only
+#'   portfolio returns for the main sorting variable (given as the first
+#'   element of `sorting_variables`) are returned.
+#' @param rebalancing_month An integer between 1 and 12 specifying the month
+#'   in which to form portfolios that are held constant for one year. For
+#'   example, setting it to `7` creates portfolios in July that are held
+#'   constant until June of the following year. The default `NULL` corresponds
+#'   to periodic rebalancing.
+#' @param breakpoint_options_main A named list of [breakpoint_options()]
+#'   passed to `breakpoint_function_main` for the main sorting variable.
+#' @param breakpoint_options_secondary An optional named list of
+#'   [breakpoint_options()] passed to `breakpoint_function_secondary`.
+#' @param breakpoint_function_main A function to compute the breakpoints for
+#'   the main sorting variable. The default is set to [compute_breakpoints()].
+#' @param breakpoint_function_secondary A function to compute the breakpoints
+#'   for the secondary sorting variable. The default is set to
+#'   [compute_breakpoints()].
 #' @param min_portfolio_size An integer specifying the minimum number of
-#'   portfolio constituents (default is set to `0`, effectively deactivating the
-#'   check). Small portfolios' returns are set to zero.
-#' @param data_options A named list of \link{data_options} with characters, indicating
-#'   the column names required to run this function.  The required column names identify dates,
-#'   the stocks, and returns. Defaults to `date=date`, `id=permno`, and `ret_excess = ret_excess`.
+#'   firms required in the reported portfolio cross-section on a given date
+#'   (default `1L`, i.e. at least one observation per reported portfolio).
+#'   For both univariate and bivariate sorts the threshold is applied to the
+#'   firm count per `(portfolio, date)` of the reported cross-section: for
+#'   univariate sorts that is firms per portfolio-date; for bivariate sorts
+#'   that is firms per main-portfolio-date summed across the secondary
+#'   buckets. Cross-sections below the threshold have their returns set to
+#'   `NA`. A typical value is `5L` (the Fama-French convention). Set to `0L`
+#'   to deactivate the check entirely.
+#' @param cap_weight A numeric value between 0 and 1 specifying the percentile
+#'   at which market capitalization is capped per date when computing capped
+#'   value-weighted excess returns (i.e., `ret_excess_vw_capped`). Defaults to
+#'   `0.8`.
+#' @param data_options A list of class `tidyfinance_data_options` (created via
+#'   [data_options()]) specifying column name mappings. The `id` element is
+#'   used to specify the entity (i.e., firm), `date` is used to specify the
+#'   date column, `ret_excess` is used to specify the excess return column, and
+#'   `mktcap_lag` is used to specify the market capitalization. Uses
+#'   [data_options()] default if `NULL`: `"id" = "permno"`,
+#'   `"date" = "date"`, `"ret_excess" = "ret_excess"`, and
+#'   `"mktcap_lag" = "mktcap_lag"`.
+#' @param quiet A logical value indicating whether to suppress informational
+#'   messages about missing values in the output panel (default is `FALSE`).
 #'
-#' @return A data frame with computed portfolio returns, containing the
-#'   following columns:
+#' @note Ensure that `data` contains all required columns: the specified
+#'   sorting variables and excess returns (see options and defaults set in
+#'   `data_options`). The function will stop and throw an error if any required
+#'   columns are missing.
+#'
+#' @returns A data frame with computed portfolio returns as a complete panel
+#'   (all portfolio-date combinations), containing the following columns:
 #'   \itemize{
 #'     \item `portfolio`: The portfolio identifier.
 #'     \item `date`: The date of the portfolio return.
-#'     \item `ret_excess_vw`: The value-weighted excess return of the portfolio
-#'      (only computed if the `sorting_data` contains `mktcap_lag`)
-#'     \item `ret_excess_ew`: The equal-weighted excess return of the portfolio.
+#'     \item `ret_excess_vw`: The value-weighted excess return of the
+#'       portfolio (only computed if `data` contains a lagged market
+#'       capitalization column specified by `data_options()`, which defaults
+#'       to `mktcap_lag`). `NA` if insufficient observations for that
+#'       portfolio-date.
+#'     \item `ret_excess_ew`: The equal-weighted excess return of the
+#'       portfolio. `NA` if insufficient observations for that portfolio-date.
+#'     \item `ret_excess_vw_capped`: The capped value-weighted excess return
+#'       of the portfolio (only computed if `data` contains a lagged market
+#'       capitalization column specified by `data_options()`, which defaults
+#'       to `mktcap_lag`). Weights are computed using market capitalization
+#'       capped at the `cap_weight` percentile per date. `NA` if insufficient
+#'       observations for that portfolio-date.
 #'   }
 #'
-#' @note Ensure that the `sorting_data` contains all the required columns: The
-#'   specified sorting variables and `ret_excess`. The function will stop and
-#'   throw an error if any required columns are missing.
-#'
+#' @family portfolio functions
 #' @export
 #'
 #' @examples
+#' set.seed(42)
 #' # Univariate sorting with periodic rebalancing
 #' data <- data.frame(
 #'   permno = 1:500,
-#'   date = rep(seq.Date(from = as.Date("2020-01-01"), by = "month", length.out = 100), each = 10),
+#'   date = rep(
+#'     seq.Date(
+#'       from = as.Date("2020-01-01"),
+#'       by = "month",
+#'       length.out = 100
+#'     ),
+#'     each = 10
+#'   ),
 #'   mktcap_lag = runif(500, 100, 1000),
 #'   ret_excess = rnorm(500),
 #'   size = runif(500, 50, 150)
@@ -92,13 +130,13 @@
 #'
 #' # Bivariate dependent sorting with annual rebalancing
 #' compute_portfolio_returns(
-#'   data, c("size", "mktcap_lag"), "bivariate-independent", 7,
+#'   data, c("size", "mktcap_lag"), "bivariate-dependent", 7,
 #'   breakpoint_options_main = breakpoint_options(n_portfolios = 5),
 #'   breakpoint_options_secondary = breakpoint_options(n_portfolios = 3),
 #' )
 #'
 compute_portfolio_returns <- function(
-  sorting_data,
+  data,
   sorting_variables,
   sorting_method,
   rebalancing_month = NULL,
@@ -106,9 +144,15 @@ compute_portfolio_returns <- function(
   breakpoint_options_secondary = NULL,
   breakpoint_function_main = compute_breakpoints,
   breakpoint_function_secondary = compute_breakpoints,
-  min_portfolio_size = 0,
-  data_options = NULL
+  min_portfolio_size = 1L,
+  cap_weight = 0.8,
+  data_options = NULL,
+  quiet = FALSE
 ) {
+  if (!is.logical(quiet) || length(quiet) != 1 || is.na(quiet)) {
+    cli::cli_abort("{.arg quiet} must be a single logical.")
+  }
+
   if (is.null(data_options)) {
     data_options <- data_options()
   }
@@ -121,9 +165,7 @@ compute_portfolio_returns <- function(
     !sorting_method %in%
       c("univariate", "bivariate-dependent", "bivariate-independent")
   ) {
-    cli::cli_abort(
-      "Invalid sorting method. Choose 'univariate', 'bivariate-dependent', or 'bivariate-independent'."
-    )
+    cli::cli_abort("Invalid sorting method.")
   }
 
   if (
@@ -135,45 +177,112 @@ compute_portfolio_returns <- function(
     )
   }
 
-  required_columns <- c(
-    sorting_variables,
-    data_options$date,
-    data_options$id,
-    data_options$ret_excess
-  )
-  missing_columns <- setdiff(required_columns, colnames(sorting_data))
-  if (length(missing_columns) > 0) {
+  if (
+    !is.numeric(cap_weight) ||
+      length(cap_weight) != 1L ||
+      is.na(cap_weight) ||
+      cap_weight < 0 ||
+      cap_weight > 1
+  ) {
+    cli::cli_abort("'cap_weight' must be a single numeric value in [0, 1].")
+  }
+
+  id_col <- data_options$id
+  date_col <- data_options$date
+  ret_col <- data_options$ret_excess
+  w_col <- data_options$mktcap_lag
+  w_capped_col <- paste0(w_col, "_capped")
+
+  required_columns <- c(sorting_variables, id_col, date_col, ret_col)
+
+  missing_columns <- setdiff(required_columns, colnames(data))
+  if (length(missing_columns) > 0L) {
     cli::cli_abort(
-      "The 'sorting_data' is missing the following required columns: {paste(missing_columns, collapse = ', ')}."
+      "Missing columns: {paste(missing_columns, collapse = ', ')}."
     )
   }
 
-  mktcap_lag_missing <- !(data_options$mktcap_lag %in% colnames(sorting_data))
-
+  mktcap_lag_missing <- !(w_col %in% colnames(data))
   if (mktcap_lag_missing) {
-    sorting_data$mktcap_lag <- 1
+    data[[w_col]] <- 1L
+  }
+
+  # Store the dates before filtering out missing values
+  all_dates <- unique(data[[date_col]])
+
+  # Filter out rows with missing values in any sorting variable, as these cannot
+  # be assigned to portfolios
+  data <- data |>
+    tidyr::drop_na(dplyr::all_of(sorting_variables))
+
+  # Compute capped market capitalization per date before replacing NAs,
+  # so that the quantile is not distorted by zero-filled missing values
+  data <- data |>
+    check_new_col(w_capped_col) |>
+    dplyr::group_by(.data[[date_col]]) |>
+    dplyr::mutate(
+      !!w_capped_col := pmin(
+        .data[[w_col]],
+        stats::quantile(.data[[w_col]], cap_weight, na.rm = TRUE)
+      )
+    ) |>
+    dplyr::ungroup()
+
+  # Replace NA market caps with 0, as these observations should not contribute
+  # to the value-weighted return
+  missing_mcap_data <- is.na(data[[w_col]])
+  data[[w_col]][missing_mcap_data] <- 0
+  data[[w_capped_col]][missing_mcap_data] <- 0
+
+  # Handle edge case where all observations are filtered out
+  if (nrow(data) == 0L) {
+    if (!quiet) {
+      cli::cli_inform(
+        paste0(
+          "Returning an empty panel: all observations were filtered out ",
+          "(n() <= {min_portfolio_size} on every date)."
+        )
+      )
+    }
+
+    empty_result <- tibble::tibble(
+      portfolio = integer(0L),
+      !!date_col := as.Date(character(0L)),
+      ret_excess_ew = numeric(0L)
+    )
+    if (!mktcap_lag_missing) {
+      empty_result <- empty_result |>
+        tibble::add_column(
+          ret_excess_vw = numeric(0L),
+          .before = "ret_excess_ew"
+        ) |>
+        tibble::add_column(
+          ret_excess_vw_capped = numeric(0L),
+          .before = "ret_excess_ew"
+        )
+    }
+    return(empty_result)
   }
 
   if (
     !is.null(rebalancing_month) &&
-      (rebalancing_month > 12 || rebalancing_month < 1)
+      (rebalancing_month > 12L || rebalancing_month < 1L)
   ) {
-    cli::cli_abort(
-      "The 'rebalancing_month' must be NULL (periodic rebalancing) or an integer between 1 and 12 (annual rebalancing)."
-    )
+    cli::cli_abort("Invalid rebalancing_month.")
   }
 
   if (sorting_method == "univariate") {
-    if (length(sorting_variables) > 1) {
+    if (length(sorting_variables) > 1L) {
       cli::cli_abort("Only provide one sorting variable for univariate sorts.")
     }
 
     if (is.null(rebalancing_month)) {
-      portfolio_returns <- sorting_data |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      portfolio_returns <- data |>
+        check_new_col("portfolio") |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio = assign_portfolio(
-            data = pick(everything()),
+            data = dplyr::pick(dplyr::everything()),
             sorting_variable = sorting_variables,
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
@@ -181,264 +290,407 @@ compute_portfolio_returns <- function(
           )
         )
     } else {
-      portfolio_data <- sorting_data |>
-        filter(month(.data[[data_options$date]]) == rebalancing_month) |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      filtered_data <- data |>
+        dplyr::filter(month(.data[[date_col]]) == rebalancing_month)
+
+      if (nrow(filtered_data) == 0) {
+        cli::cli_abort(
+          paste0(
+            "No observations match {.arg rebalancing_month} = ",
+            "{rebalancing_month}. Check that the data contains dates in ",
+            "the specified rebalancing month."
+          )
+        )
+      }
+
+      portfolio_data <- filtered_data |>
+        check_new_col("portfolio") |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio = assign_portfolio(
-            data = pick(everything()),
+            data = dplyr::pick(dplyr::everything()),
             sorting_variable = sorting_variables,
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
             data_options = data_options
           )
         ) |>
-        ungroup() |>
-        select(all_of(c(data_options$id, data_options$date, "portfolio")))
+        dplyr::ungroup() |>
+        dplyr::select(all_of(c(id_col, date_col, "portfolio")))
 
-      portfolio_returns <- sorting_data |>
-        rename(
-          "..date" = all_of(data_options$date),
-          "..id" := all_of(data_options$id)
-        ) |>
-        left_join(
-          portfolio_data |>
-            rename("..id" = all_of(data_options$id)) |>
-            mutate(
-              lower_bound = .data[[data_options$date]],
-              upper_bound = .data[[data_options$date]] + months(12)
-            ) |>
-            select(-all_of(data_options$date)),
-          join_by(..id, closest(..date >= lower_bound), ..date < upper_bound),
-          relationship = "many-to-one"
-        ) |>
-        rename("{data_options$date}" := "..date", "{data_options$id}" := "..id")
+      portfolio_returns <- join_rebalanced_portfolios(
+        data,
+        portfolio_data,
+        date_col,
+        id_col
+      )
     }
 
     portfolio_returns <- portfolio_returns |>
-      group_by(portfolio, .data[[data_options$date]]) |>
-      summarize(
-        ret_excess_vw = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          stats::weighted.mean(
-            .data[[data_options$ret_excess]],
-            .data[[data_options$mktcap_lag]]
-          )
-        ),
-        ret_excess_ew = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          mean(.data[[data_options$ret_excess]])
-        ),
-        .groups = "drop"
+      dplyr::group_by(portfolio, .data[[date_col]]) |>
+      summarise_portfolio_returns(
+        ret_col,
+        w_col,
+        w_capped_col,
+        min_portfolio_size
       )
   }
 
   if (sorting_method == "bivariate-dependent") {
-    if (length(sorting_variables) != 2) {
+    if (length(sorting_variables) != 2L) {
       cli::cli_abort("Provide two sorting variables for bivariate sorts.")
     }
 
     if (is.null(rebalancing_month)) {
-      portfolio_returns <- sorting_data |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      portfolio_returns <- data |>
+        check_new_col(c("portfolio_secondary", "portfolio_main")) |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio_secondary = assign_portfolio(
-            pick(everything()),
+            dplyr::pick(dplyr::everything()),
             sorting_variable = sorting_variables[2],
             breakpoint_options = breakpoint_options_secondary,
             breakpoint_function = breakpoint_function_secondary,
             data_options = data_options
           )
         ) |>
-        ungroup() |>
-        group_by(.data[[data_options$date]], portfolio_secondary) |>
-        mutate(
+        dplyr::ungroup() |>
+        dplyr::group_by(.data[[date_col]], portfolio_secondary) |>
+        dplyr::mutate(
           portfolio_main = assign_portfolio(
-            pick(everything()),
+            dplyr::pick(dplyr::everything()),
             sorting_variable = sorting_variables[1],
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
             data_options = data_options
           )
         ) |>
-        ungroup()
+        dplyr::ungroup()
     } else {
-      portfolio_data <- sorting_data |>
-        filter(month(.data[[data_options$date]]) == rebalancing_month) |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      portfolio_data <- data |>
+        check_new_col(c("portfolio_secondary", "portfolio_main")) |>
+        dplyr::filter(month(.data[[date_col]]) == rebalancing_month) |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio_secondary = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[2],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[2L],
             breakpoint_options = breakpoint_options_secondary,
             breakpoint_function = breakpoint_function_secondary,
             data_options = data_options
           )
         ) |>
-        ungroup() |>
-        group_by(.data[[data_options$date]], portfolio_secondary) |>
-        mutate(
+        dplyr::ungroup() |>
+        dplyr::group_by(.data[[date_col]], portfolio_secondary) |>
+        dplyr::mutate(
           portfolio_main = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[1],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[1L],
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
             data_options = data_options
           )
         ) |>
-        ungroup() |>
-        select(all_of(c(
-          data_options$id,
-          data_options$date,
+        dplyr::ungroup() |>
+        dplyr::select(all_of(c(
+          id_col,
+          date_col,
           "portfolio_main",
           "portfolio_secondary"
         )))
 
-      portfolio_returns <- sorting_data |>
-        rename(
-          "..date" = all_of(data_options$date),
-          "..id" := all_of(data_options$id)
-        ) |>
-        left_join(
-          portfolio_data |>
-            rename("..id" = all_of(data_options$id)) |>
-            mutate(lower_bound = date, upper_bound = date + months(12)) |>
-            select(-all_of(data_options$date)),
-          join_by(..id, closest(..date >= lower_bound), ..date < upper_bound),
-          relationship = "many-to-one"
-        ) |>
-        rename("{data_options$date}" := "..date", "{data_options$id}" := "..id")
+      portfolio_returns <- join_rebalanced_portfolios(
+        data,
+        portfolio_data,
+        date_col,
+        id_col
+      )
     }
 
-    portfolio_returns <- portfolio_returns |>
-      group_by(
-        portfolio_main,
-        portfolio_secondary,
-        .data[[data_options$date]]
-      ) |>
-      summarize(
-        ret_excess_vw = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          stats::weighted.mean(ret_excess, mktcap_lag)
-        ),
-        ret_excess_ew = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          mean(ret_excess)
-        ),
-        .groups = "drop"
-      ) |>
-      group_by(portfolio = portfolio_main, .data[[data_options$date]]) |>
-      summarize(
-        across(c(ret_excess_vw, ret_excess_ew), \(x) mean(x, na.rm = TRUE)),
-        .groups = "drop"
-      )
+    portfolio_returns <- aggregate_bivariate_returns(
+      portfolio_returns,
+      date_col,
+      ret_col,
+      w_col,
+      w_capped_col,
+      min_portfolio_size
+    )
   }
 
   if (sorting_method == "bivariate-independent") {
-    if (length(sorting_variables) != 2) {
+    if (length(sorting_variables) != 2L) {
       cli::cli_abort("Provide two sorting variables for bivariate sorts.")
     }
 
     if (is.null(rebalancing_month)) {
-      portfolio_returns <- sorting_data |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      portfolio_returns <- data |>
+        check_new_col(c("portfolio_secondary", "portfolio_main")) |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio_secondary = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[2],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[2L],
             breakpoint_options = breakpoint_options_secondary,
             breakpoint_function = breakpoint_function_secondary,
             data_options = data_options
           ),
           portfolio_main = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[1],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[1L],
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
             data_options = data_options
           )
         ) |>
-        ungroup()
+        dplyr::ungroup()
     } else {
-      portfolio_data <- sorting_data |>
-        filter(month(.data[[data_options$date]]) == rebalancing_month) |>
-        group_by(.data[[data_options$date]]) |>
-        mutate(
+      portfolio_data <- data |>
+        check_new_col(c("portfolio_secondary", "portfolio_main")) |>
+        dplyr::filter(month(.data[[date_col]]) == rebalancing_month) |>
+        dplyr::group_by(.data[[date_col]]) |>
+        dplyr::mutate(
           portfolio_secondary = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[2],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[2L],
             breakpoint_options = breakpoint_options_secondary,
             breakpoint_function = breakpoint_function_secondary,
             data_options = data_options
           ),
           portfolio_main = assign_portfolio(
-            pick(everything()),
-            sorting_variable = sorting_variables[1],
+            dplyr::pick(dplyr::everything()),
+            sorting_variable = sorting_variables[1L],
             breakpoint_options = breakpoint_options_main,
             breakpoint_function = breakpoint_function_main,
             data_options = data_options
           )
         ) |>
-        ungroup() |>
-        select(all_of(c(
-          data_options$id,
-          data_options$date,
+        dplyr::ungroup() |>
+        dplyr::select(all_of(c(
+          id_col,
+          date_col,
           "portfolio_main",
           "portfolio_secondary"
         )))
 
-      portfolio_returns <- sorting_data |>
-        rename(
-          "..date" = all_of(data_options$date),
-          "..id" := all_of(data_options$id)
-        ) |>
-        left_join(
-          portfolio_data |>
-            rename("..id" = all_of(data_options$id)) |>
-            mutate(
-              lower_bound = .data[[data_options$date]],
-              upper_bound = .data[[data_options$date]] + months(12)
-            ) |>
-            select(-all_of(data_options$date)),
-          join_by(..id, closest(..date >= lower_bound), ..date < upper_bound),
-          relationship = "many-to-one"
-        ) |>
-        rename("{data_options$date}" := "..date", "{data_options$id}" := "..id")
+      portfolio_returns <- join_rebalanced_portfolios(
+        data,
+        portfolio_data,
+        date_col,
+        id_col
+      )
     }
 
-    portfolio_returns <- portfolio_returns |>
-      group_by(
-        portfolio_main,
-        portfolio_secondary,
-        .data[[data_options$date]]
-      ) |>
-      summarize(
-        ret_excess_vw = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          stats::weighted.mean(ret_excess, mktcap_lag)
-        ),
-        ret_excess_ew = if_else(
-          n() < min_portfolio_size,
-          NA_real_,
-          mean(ret_excess)
-        ),
-        .groups = "drop"
-      ) |>
-      group_by(portfolio = portfolio_main, .data[[data_options$date]]) |>
-      summarize(
-        across(c(ret_excess_vw, ret_excess_ew), \(x) mean(x, na.rm = TRUE)),
-        .groups = "drop"
+    portfolio_returns <- aggregate_bivariate_returns(
+      portfolio_returns,
+      date_col,
+      ret_col,
+      w_col,
+      w_capped_col,
+      min_portfolio_size
+    )
+  }
+
+  portfolio_returns <- portfolio_returns[!is.na(portfolio_returns$portfolio), ]
+
+  # When rebalancing annually, dates before the first rebalancing month
+  # cannot receive portfolio assignments, so exclude them from the panel
+  if (!is.null(rebalancing_month)) {
+    matching_dates <- all_dates[month(all_dates) == rebalancing_month]
+    if (length(matching_dates) == 0L) {
+      cli::cli_abort("No dates in data match {rebalancing_month = }.")
+    }
+    first_rebalancing_date <- min(matching_dates)
+    all_dates <- all_dates[all_dates >= first_rebalancing_date]
+  }
+
+  # Complete the panel: ensure all portfolio-date combinations are present
+  all_portfolios <- na.omit(unique(portfolio_returns$portfolio))
+
+  complete_panel <- tidyr::expand_grid(
+    portfolio = all_portfolios,
+    !!date_col := all_dates
+  )
+
+  return_cols <- if (mktcap_lag_missing) {
+    "ret_excess_ew"
+  } else {
+    c("ret_excess_vw", "ret_excess_ew", "ret_excess_vw_capped")
+  }
+
+  portfolio_returns <- complete_panel |>
+    dplyr::left_join(portfolio_returns, by = c("portfolio", date_col)) |>
+    dplyr::select(dplyr::all_of(c("portfolio", date_col, return_cols)))
+
+  # Count and report missing values
+  n_missing <- sum(is.na(portfolio_returns[["ret_excess_ew"]]))
+
+  if (!quiet && n_missing > 0L) {
+    cli::cli_inform(
+      paste0(
+        "Returning a complete panel with {n_missing} missing value{?s} ",
+        "in factor returns due to insufficient observations ",
+        "(fewer than {min_portfolio_size} firm{?s} per (portfolio, date) ",
+        "cross-section)."
       )
+    )
   }
 
-  if (mktcap_lag_missing) {
-    portfolio_returns <- portfolio_returns |> select(-ret_excess_vw)
-  }
+  portfolio_returns
+}
 
-  portfolio_returns[!is.na(portfolio_returns$portfolio), ]
+#' Summarise portfolio returns (internal helper)
+#'
+#' Computes equal-weighted, value-weighted, and capped value-weighted returns
+#' for an already-grouped data frame. Groups with fewer than
+#' `min_portfolio_size` observations receive `NA`.
+#'
+#' @param data A grouped data frame.
+#' @param ret_col Column name for excess returns.
+#' @param w_col Column name for market capitalization weights.
+#' @param w_capped_col Column name for capped market capitalization weights.
+#' @param min_portfolio_size Minimum number of stocks per portfolio-date.
+#'
+#' @returns An ungrouped data frame with columns `ret_excess_vw`,
+#'   `ret_excess_ew`, and `ret_excess_vw_capped`.
+#'
+#' @keywords internal
+#' @noRd
+summarise_portfolio_returns <- function(
+  data,
+  ret_col,
+  w_col,
+  w_capped_col,
+  min_portfolio_size
+) {
+  data |>
+    dplyr::summarise(
+      ret_excess_vw = dplyr::if_else(
+        dplyr::n() < min_portfolio_size | sum(.data[[w_col]]) == 0,
+        NA_real_,
+        stats::weighted.mean(.data[[ret_col]], .data[[w_col]])
+      ),
+      ret_excess_ew = dplyr::if_else(
+        dplyr::n() < min_portfolio_size,
+        NA_real_,
+        mean(.data[[ret_col]])
+      ),
+      ret_excess_vw_capped = dplyr::if_else(
+        dplyr::n() < min_portfolio_size | sum(.data[[w_capped_col]]) == 0,
+        NA_real_,
+        stats::weighted.mean(.data[[ret_col]], .data[[w_capped_col]])
+      ),
+      .groups = "drop"
+    )
+}
+
+#' Aggregate bivariate-sort returns across the secondary dimension
+#'
+#' Computes cell-level returns over `(portfolio_main, portfolio_secondary,
+#' date)` without an occupancy threshold, then averages across the secondary
+#' buckets to obtain reported `(portfolio_main, date)` returns. The
+#' `min_portfolio_size` threshold is applied to the per-`(portfolio_main,
+#' date)` firm count (the reported cross-section), not per cell.
+#'
+#' @param portfolio_returns A panel with columns `portfolio_main`,
+#'   `portfolio_secondary`, the date column, and per-stock returns/weights.
+#' @param date_col,ret_col,w_col,w_capped_col Column names.
+#' @param min_portfolio_size Minimum firms per reported `(portfolio_main,
+#'   date)` cross-section. Cross-sections below this size receive `NA`.
+#'
+#' @returns A data frame with columns `portfolio`, the date column, and the
+#'   three return columns.
+#'
+#' @keywords internal
+#' @noRd
+aggregate_bivariate_returns <- function(
+  portfolio_returns,
+  date_col,
+  ret_col,
+  w_col,
+  w_capped_col,
+  min_portfolio_size
+) {
+  n_per_main_date <- portfolio_returns |>
+    dplyr::filter(!is.na(portfolio_main), !is.na(portfolio_secondary)) |>
+    dplyr::count(portfolio_main, .data[[date_col]], name = "n_firms")
+
+  portfolio_returns |>
+    dplyr::group_by(portfolio_main, portfolio_secondary, .data[[date_col]]) |>
+    summarise_portfolio_returns(
+      ret_col,
+      w_col,
+      w_capped_col,
+      min_portfolio_size = 0L
+    ) |>
+    dplyr::group_by(portfolio = portfolio_main, .data[[date_col]]) |>
+    dplyr::summarise(
+      dplyr::across(
+        c(ret_excess_vw, ret_excess_ew, ret_excess_vw_capped),
+        \(x) mean(x, na.rm = TRUE)
+      ),
+      .groups = "drop"
+    ) |>
+    dplyr::left_join(
+      n_per_main_date,
+      by = stats::setNames(
+        c("portfolio_main", date_col),
+        c("portfolio", date_col)
+      )
+    ) |>
+    dplyr::mutate(
+      dplyr::across(
+        c(ret_excess_vw, ret_excess_ew, ret_excess_vw_capped),
+        \(x) {
+          dplyr::if_else(
+            is.nan(x) | is.na(n_firms) | n_firms < min_portfolio_size,
+            NA_real_,
+            x
+          )
+        }
+      )
+    ) |>
+    dplyr::select(-n_firms)
+}
+
+#' Join rebalanced portfolio assignments to sorting data (internal helper)
+#'
+#' Performs an inequality join to carry forward annual portfolio assignments to
+#' all dates within the 12-month rebalancing window.
+#'
+#' @param data The full panel of stock-level data.
+#' @param portfolio_data Portfolio assignments at rebalancing dates.
+#' @param date_col Name of the date column.
+#' @param id_col Name of the stock identifier column.
+#'
+#' @returns A data frame with portfolio assignments joined to all dates.
+#'
+#' @keywords internal
+#' @noRd
+join_rebalanced_portfolios <- function(
+  data,
+  portfolio_data,
+  date_col,
+  id_col
+) {
+  data |>
+    dplyr::rename(
+      "..date" = dplyr::all_of(date_col),
+      "..id" = dplyr::all_of(id_col)
+    ) |>
+    dplyr::left_join(
+      portfolio_data |>
+        dplyr::rename("..id" = dplyr::all_of(id_col)) |>
+        dplyr::mutate(
+          lower_bound = .data[[date_col]],
+          upper_bound = .data[[date_col]] + months(12)
+        ) |>
+        dplyr::select(-dplyr::all_of(date_col)),
+      dplyr::join_by(
+        ..id,
+        closest(..date >= lower_bound),
+        ..date <= upper_bound
+      ),
+      relationship = "many-to-one"
+    ) |>
+    dplyr::rename("{date_col}" := "..date", "{id_col}" := "..id")
 }

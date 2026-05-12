@@ -19,26 +19,26 @@ create_summary_statistics(
 to summarize. These variables must be either numeric, integer, or logical.}
 
 \item{by}{An optional unquoted variable name to group the data before
-summarizing. If \code{NULL} (the default), summary statistics are computed across
-all observations.}
+summarizing. If \code{NULL} (the default), summary statistics are computed
+across all observations.}
 
 \item{detail}{A logical flag indicating whether to compute detailed summary
-statistics including additional quantiles. Defaults to FALSE, which
-computes basic statistics (n, mean, sd, min, median, max). When TRUE,
+statistics, including additional quantiles. Defaults to \code{FALSE}, which
+computes basic statistics (n, mean, sd, min, median, max). When \code{TRUE},
 additional quantiles (1\%, 5\%, 10\%, 25\%, 75\%, 90\%, 95\%, 99\%) are computed.}
 
 \item{drop_na}{A logical flag indicating whether to drop missing values for
-each variabl (default is FALSE).}
+each variable (default is \code{FALSE}).}
 }
 \value{
 A tibble with summary statistics for each selected variable. If \code{by}
 is specified, the output includes the grouping variable as well. Each row
-represents a variable (and a group if \code{by} is used), and columns include
-the computed statistics.
+represents a variable (and a group if \code{by} is used), and each column
+contains the computed statistics.
 }
 \description{
 Computes a set of summary statistics for numeric and integer variables in a
-data frame. This function allows users to select specific variables for
+data frame. It allows users to select specific variables for
 summarization and can calculate statistics for the whole dataset or within
 groups specified by the \code{by} argument. Additional detail levels for quantiles
 can be included.
@@ -51,10 +51,43 @@ variables.
 
 The basic set of summary statistics includes the count of non-NA values (n),
 mean, standard deviation (sd), minimum (min), median (q50), and maximum
-(max). If \code{detail} is TRUE, the function also computes the 1st, 5th, 10th,
+(max). If \code{detail} is \code{TRUE}, the function also computes the 1st, 5th, 10th,
 25th, 75th, 90th, 95th, and 99th percentiles.
 
 Summary statistics are computed for each variable specified in \code{...}. If a
 \code{by} variable is provided, statistics are computed within each level of the
 \code{by} variable.
 }
+\examples{
+data <- data.frame(
+  ret = c(0.01, -0.02, 0.03, NA, 0.005),
+  size = c(100, 200, 150, 300, 250),
+  group = c("A", "A", "B", "B", "A")
+)
+
+# Basic summary across all observations
+create_summary_statistics(data, ret, size)
+
+# Grouped summary
+create_summary_statistics(data, ret, size, by = group)
+
+# Detailed quantiles
+create_summary_statistics(data, ret, detail = TRUE)
+}
+\seealso{
+Other utility functions: 
+\code{\link{get_available_huggingface_files}()},
+\code{\link{list_supported_indexes}()},
+\code{\link{list_supported_types}()},
+\code{\link{list_supported_types_ff}()},
+\code{\link{list_supported_types_ff_legacy}()},
+\code{\link{list_supported_types_macro_predictors}()},
+\code{\link{list_supported_types_other}()},
+\code{\link{list_supported_types_wrds}()},
+\code{\link{list_tidy_finance_chapters}()},
+\code{\link{open_tidy_finance_website}()},
+\code{\link{trim}()},
+\code{\link{validate_dates}()},
+\code{\link{winsorize}()}
+}
+\concept{utility functions}

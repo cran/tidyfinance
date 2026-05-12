@@ -11,11 +11,11 @@ download_data_wrds_fisd(additional_columns = NULL)
 as a character vector.}
 }
 \value{
-A data frame containing a subset of FISD data with fields related to
-the bond's characteristics and issuer information. This includes complete
-CUSIP, maturity date, offering amount, offering date, dated date, interest
-frequency, coupon, last interest date, issue ID, issuer ID, SIC code of the
-issuer.
+A data frame containing a subset of FISD data with fields related
+to the bond's characteristics and issuer information. This includes
+complete CUSIP, maturity date, offering amount, offering date, dated date,
+interest frequency, coupon, last interest date, issue ID, issuer ID, and
+SIC code of the issuer.
 }
 \description{
 Establishes a connection to the WRDS database to download a filtered subset
@@ -29,7 +29,22 @@ securities. It finally returns a data frame with selected fields from the
 }
 \examples{
 \dontrun{
-  fisd <- download_data_wrds_fisd()
-  fisd_extended <- download_data_wrds_fisd(additional_columns = c("asset_backed", "defeased"))
+fisd <- download_data_wrds_fisd()
+fisd_extended <- download_data_wrds_fisd(
+  additional_columns = c("asset_backed", "defeased")
+)
 }
 }
+\seealso{
+Other WRDS functions: 
+\code{\link{create_wrds_dummy_database}()},
+\code{\link{disconnect_connection}()},
+\code{\link{download_data_wrds}()},
+\code{\link{download_data_wrds_ccm_links}()},
+\code{\link{download_data_wrds_compustat}()},
+\code{\link{download_data_wrds_crsp}()},
+\code{\link{download_data_wrds_trace_enhanced}()},
+\code{\link{get_wrds_connection}()},
+\code{\link{set_wrds_credentials}()}
+}
+\concept{WRDS functions}
