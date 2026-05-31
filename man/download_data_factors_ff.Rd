@@ -32,16 +32,16 @@ date range.
 }
 \description{
 Downloads and processes Fama-French factor data based on the specified
-dataset name and date range. The function requires the \code{frenchdata}
-package to download the data. It processes the raw data into a structured
-format, including date conversion, scaling factor values, and filtering by
-the specified date range.
+dataset name and date range. The data is downloaded directly from Kenneth
+French's data library and processed into a structured format, including
+date conversion, scaling factor values, and filtering by the specified date
+range.
 }
 \details{
 If there are multiple tables in the raw Fama-French data (e.g.,
 value-weighted and equal-weighted returns), then the function only returns
-the first table because these are the most popular. Please use the
-\code{frenchdata} package directly if you need less commonly used tables.
+the first table because these are the most popular. Download the source ZIP
+archive directly if you need less commonly used tables.
 }
 \examples{
 \donttest{
@@ -76,6 +76,8 @@ Other download functions:
 \code{\link{download_data_macro_predictors}()},
 \code{\link{download_data_osap}()},
 \code{\link{download_data_risk_free}()},
-\code{\link{download_data_stock_prices}()}
+\code{\link{download_data_stock_prices}()},
+\code{\link{download_factor_library_grid}()},
+\code{\link{download_factor_library_ids}()}
 }
 \concept{download functions}

@@ -1,3 +1,57 @@
+# tidyfinance 0.6.0
+
+## New features
+
+- Added `domain = "pseudo"` to `download_data()` for generating pseudo
+  data with the same schema as the corresponding real domain. Supported
+  datasets in this release: `"crsp_monthly"`, `"crsp_daily"`,
+  `"compustat_annual"`, `"compustat_quarterly"`, and `"ccm_links"` (all
+  mirroring `domain = "wrds"`). Internally, every `domain = "pseudo"`
+  call funnels through `simulate_pseudo_data()`, the unexported router
+  that dispatches to per-dataset generators. Per-dataset entry points
+  (`download_data_pseudo_crsp()`, `download_data_pseudo_compustat()`,
+  `download_data_pseudo_ccm_links()`) remain exported for direct use.
+  All generators accept `n_assets` and `seed` arguments; identical
+  `(seed, n_assets)` yields the same identifier universe across datasets,
+  so pseudo CRSP and Compustat join cleanly via `add_ccm_links = TRUE`
+  or `ccm_links`. Daily CRSP is generated on weekdays only.
+- Added `download_factor_library_grid()` to fetch the
+  `tidy-finance/factor-library-grid` dataset from Hugging Face. Also
+  accessible via `download_data("tidyfinance", "factor_library_grid")`.
+
+## Improvements
+
+- Added `test-coverage.yaml` workflow and badge to README.
+- Added tests to get coverage to 100% (excl. `set_wrds_credentials()`).
+- Fama-French factor data is now downloaded and parsed internally via `httr2`, 
+  so `frenchdata` is no longer declared in `Imports`. The behavior of
+  `download_data_factors_ff()` is unchanged.
+- `download_data("tidyfinance", "factor_library", ...)` now honors the
+  canonical `start_date` and `end_date` arguments, filtering the returned
+  portfolio returns to the requested range. When both are omitted, the full
+  history is returned and the standard "Returning the full data set" message
+  is emitted (via `validate_dates()`). Previously these arguments were
+  accepted but silently ignored for the factor library.
+- Removed the `using-tidyfinance` and `dates-in-tidyfinance` vignettes.
+  Both predated the current `download_data()` interface and are
+  superseded by the package manuscript. `knitr` and `rmarkdown` are no
+  longer declared in `Suggests`, and `VignetteBuilder` has been dropped
+  from `DESCRIPTION`.
+- `download_data("tidyfinance", "factor_library", ids = <vector>)` now
+  delegates directly to `download_factor_library_ids()`, bypassing the
+  grid filter. Passing `ids` together with filter arguments raises an
+  informative error.
+- Renamed `list_supported_types()` to `list_supported_datasets()`
+  ([#242](https://github.com/tidy-finance/r-tidyfinance/issues/242)). The
+  old name remains exported as a soft-deprecated alias that forwards to the
+  new function. Internal helpers were renamed accordingly
+  (e.g. `list_supported_types_ff()` -> `list_supported_datasets_ff()`).
+- `download_data_constituents()` now drops symbols equal to `"-"`.
+- Renamed `only_us` parameter in `download_data_wrds_compustat()` to `only_usd`
+  to reflect that the filter keeps USD-denominated shares only. The old name
+  is deprecated and forwards to `only_usd` with a warning.
+- Removed `arrow`, `glue`, and `stringr` dependencies and added `nanoparquet`.
+
 # tidyfinance 0.5.0
 
 ## New features
@@ -37,6 +91,7 @@
 - Removed erroneous time zone adjustment in `download_data_wrds_trace_enhanced()` [#133](https://github.com/tidy-finance/r-tidyfinance/issues/133). 
 - Replaced tabs in `list_supported_types_ff()` with underscores [#134](https://github.com/tidy-finance/r-tidyfinance/issues/134).
 - `compute_portfolio_returns()` and `implement_portfolio_sort()` now apply `min_portfolio_size` to the reported portfolio cross-section. For bivariate sorts this is the firm count per `(main_portfolio, date)` summed across secondary buckets, not per `(main, secondary, date)` cell as before. Previously, setting `min_portfolio_size` to the number of cells (e.g. `n_main * n_secondary`) silently voided every cell. Univariate behaviour is unchanged. The default has changed from `0L` to `1L`, so each reported portfolio is required to have at least one observation by default; pass `min_portfolio_size = 0L` to deactivate the check. The param documentation has also been corrected to reflect that small portfolios receive `NA` (not zero).
+- `compute_long_short_returns()` no longer errors with `object 'top' not found` when the input panel contains only one distinct portfolio (e.g., because `assign_portfolio()` collapsed to a single bucket on a constant sorting variable). The long-short return is now `NA` on such dates, consistent with "no investment, no return", instead of crashing.
 
 # tidyfinance 0.4.5
 

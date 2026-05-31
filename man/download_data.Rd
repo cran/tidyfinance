@@ -15,8 +15,10 @@ download_data(
 }
 \arguments{
 \item{domain}{The domain of the dataset to download (e.g.,
-"famafrench", "globalq", "macro_predictors", "wrds",
-"constituents", "fred", "stock_prices", "osap", "tidyfinance").}
+"famafrench", "globalq", "macro_predictors", "wrds", "pseudo",
+"constituents", "fred", "stock_prices", "osap", "tidyfinance").
+Use \code{"pseudo"} to obtain pseudo data with the same schema as
+\code{"wrds"} for testing or rendering without a WRDS subscription.}
 
 \item{dataset}{Optional. The specific dataset to download within the
 domain.}
@@ -38,8 +40,10 @@ dataset type.}
 depending on the \code{domain}. For instance, if \code{domain} is
 \code{"constituents"}, arguments are passed to
 \code{download_data_constituents()}. If \code{domain} is \code{"tidyfinance"} and
-\code{dataset} is \code{"factor_library"}, arguments are used to filter the
-portfolio grid (e.g., \code{sorting_variable}, \code{rebalancing}, \code{fill_all});
+\code{dataset} is \code{"factor_library"}, arguments are either filter inputs
+(e.g., \code{sorting_variable}, \code{rebalancing}, \code{fill_all}) or an explicit
+\code{ids} vector that bypasses the grid filter and downloads the
+specified portfolios directly via \code{download_factor_library_ids()};
 see \code{download_data_huggingface()} for details.}
 }
 \value{
@@ -83,6 +87,8 @@ download_data(
   sorting_variable = "52w",
   rebalancing = "annual"
 )
+download_data("tidyfinance", "factor_library", ids = c(1L, 2L, 3L))
+download_data("tidyfinance", "factor_library_grid")
 }
 }
 \seealso{
@@ -95,6 +101,8 @@ Other download functions:
 \code{\link{download_data_macro_predictors}()},
 \code{\link{download_data_osap}()},
 \code{\link{download_data_risk_free}()},
-\code{\link{download_data_stock_prices}()}
+\code{\link{download_data_stock_prices}()},
+\code{\link{download_factor_library_grid}()},
+\code{\link{download_factor_library_ids}()}
 }
 \concept{download functions}

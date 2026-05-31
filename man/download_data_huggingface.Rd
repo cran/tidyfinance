@@ -6,34 +6,41 @@
 \usage{
 download_data_huggingface(
   dataset = NULL,
-  start_date = "2007-06-27",
-  end_date = "2007-07-27",
+  start_date = NULL,
+  end_date = NULL,
   type = deprecated(),
   ...
 )
 }
 \arguments{
 \item{dataset}{Character(1). The dataset to download. Supported values are
-\code{"high_frequency_sp500"} and \code{"factor_library"}.}
+\code{"high_frequency_sp500"}, \code{"factor_library"}, and \code{"factor_library_grid"}.}
 
 \item{start_date}{Date or character. Start date (inclusive) in
-\code{"YYYY-MM-DD"} format. Only used for \code{"high_frequency_sp500"}.}
+\code{"YYYY-MM-DD"} format. Used for \code{"high_frequency_sp500"} and
+\code{"factor_library"}. When omitted for \code{"factor_library"}, the full return
+history is returned; \code{"high_frequency_sp500"} falls back to a built-in
+sample window.}
 
 \item{end_date}{Date or character. End date (inclusive) in \code{"YYYY-MM-DD"}
-format. Only used for \code{"high_frequency_sp500"}.}
+format. See \code{start_date}.}
 
 \item{type}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{dataset} instead.}
 
-\item{...}{For \code{dataset = "factor_library"}: named arguments used to filter
-the portfolio grid. Each argument takes the form \code{column = value}, where
-\code{value} may be a vector to match multiple levels. Optionally pass
-\code{fill_all = TRUE} to leave unspecified columns unrestricted (default:
-\code{FALSE}, i.e. unspecified columns are fixed at the defaults listed below).
-Passing \code{NULL} for any parameter removes that filter entirely, returning
-all values for that column (e.g., \code{min_size_quantile = NULL} includes all
-size groups). Passing an unrecognised column name raises an error listing
-the supported names. Ignored when \code{dataset != "factor_library"}. See the
-Details section for supported columns and their defaults.}
+\item{...}{For \code{dataset = "factor_library"}: either named arguments used
+to filter the portfolio grid, or \verb{ids = <vector>} to bypass the grid
+filter and download specific portfolios directly via
+\code{\link[=download_factor_library_ids]{download_factor_library_ids()}}. Filter arguments take the form
+\code{column = value}, where \code{value} may be a vector to match multiple
+levels. Optionally pass \code{fill_all = TRUE} to leave unspecified columns
+unrestricted (default: \code{FALSE}, i.e. unspecified columns are fixed at
+the defaults listed below). Passing \code{NULL} for any parameter removes
+that filter entirely, returning all values for that column (e.g.,
+\code{min_size_quantile = NULL} includes all size groups). Passing an
+unrecognised column name raises an error listing the supported names.
+\code{ids} cannot be combined with filter arguments. Ignored when
+\code{dataset != "factor_library"}. See the Details section for supported
+columns and their defaults.}
 }
 \value{
 A tibble with the downloaded data. For \code{"high_frequency_sp500"},
@@ -45,7 +52,10 @@ with the full grid metadata for the matched portfolio IDs.
 Downloads data from a supported Hugging Face dataset. For
 \code{"high_frequency_sp500"}, parquet files are filtered by date range and
 row-bound. For \code{"factor_library"}, portfolio characteristics are selected via
-\code{filter_factor_library_grid()} and the matching return data is downloaded.
+\code{filter_factor_library_grid()}, the matching return data is downloaded, and
+the result is filtered to \code{start_date}/\code{end_date} when both are supplied.
+For \code{"factor_library_grid"}, the grid itself is returned via
+\code{\link[=download_factor_library_grid]{download_factor_library_grid()}}.
 }
 \details{
 \strong{Note on \code{dataset = "factor_library"} defaults:} The defaults below reflect
@@ -103,6 +113,13 @@ portfolios: \code{"VW"} for value-weighted or \code{"EW"} for equal-weighted.
   download_data_huggingface(
     "factor_library", sorting_variable = "ag", fill_all = TRUE
   )
+  download_data_huggingface(
+    "factor_library",
+    sorting_variable = "me",
+    start_date = "2000-01-01",
+    end_date = "2020-12-31"
+  )
+  download_data_huggingface("factor_library", ids = c(1L, 2L, 3L))
 }
 }
 \seealso{
@@ -115,6 +132,8 @@ Other download functions:
 \code{\link{download_data_macro_predictors}()},
 \code{\link{download_data_osap}()},
 \code{\link{download_data_risk_free}()},
-\code{\link{download_data_stock_prices}()}
+\code{\link{download_data_stock_prices}()},
+\code{\link{download_factor_library_grid}()},
+\code{\link{download_factor_library_ids}()}
 }
 \concept{download functions}

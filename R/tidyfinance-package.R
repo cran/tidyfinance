@@ -14,9 +14,7 @@
 #' @importFrom tidyr pivot_longer unnest nest fill drop_na
 #' @importFrom rlang := enquo syms quo_is_null
 #' @importFrom jsonlite fromJSON
-#' @importFrom stringr str_match
-#' @importFrom frenchdata download_french_data get_french_data_list
-#' @importFrom arrow read_parquet write_parquet
+#' @importFrom nanoparquet read_parquet
 #' @importFrom RPostgres Postgres
 #' @importFrom sandwich NeweyWest
 #' @importFrom dbplyr translate_sql

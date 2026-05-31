@@ -7,8 +7,10 @@
 #' processing the data.
 #'
 #' @param domain The domain of the dataset to download (e.g.,
-#'   "famafrench", "globalq", "macro_predictors", "wrds",
+#'   "famafrench", "globalq", "macro_predictors", "wrds", "pseudo",
 #'   "constituents", "fred", "stock_prices", "osap", "tidyfinance").
+#'   Use `"pseudo"` to obtain pseudo data with the same schema as
+#'   `"wrds"` for testing or rendering without a WRDS subscription.
 #' @param dataset Optional. The specific dataset to download within the
 #'   domain.
 #' @param start_date Optional. A character string or Date object in
@@ -25,8 +27,10 @@
 #'   depending on the `domain`. For instance, if `domain` is
 #'   `"constituents"`, arguments are passed to
 #'   `download_data_constituents()`. If `domain` is `"tidyfinance"` and
-#'   `dataset` is `"factor_library"`, arguments are used to filter the
-#'   portfolio grid (e.g., `sorting_variable`, `rebalancing`, `fill_all`);
+#'   `dataset` is `"factor_library"`, arguments are either filter inputs
+#'   (e.g., `sorting_variable`, `rebalancing`, `fill_all`) or an explicit
+#'   `ids` vector that bypasses the grid filter and downloads the
+#'   specified portfolios directly via `download_factor_library_ids()`;
 #'   see `download_data_huggingface()` for details.
 #'
 #' @returns A tibble with processed data, including dates and the relevant
@@ -65,6 +69,8 @@
 #'   sorting_variable = "52w",
 #'   rebalancing = "annual"
 #' )
+#' download_data("tidyfinance", "factor_library", ids = c(1L, 2L, 3L))
+#' download_data("tidyfinance", "factor_library_grid")
 #' }
 download_data <- function(
   domain = NULL,
@@ -93,7 +99,7 @@ download_data <- function(
       what = "download_data(type)",
       details = paste0(
         "Column type should be replaced with domain and dataset. ",
-        "Use `list_supported_types()` to see the mapping."
+        "Use `list_supported_datasets()` to see the mapping."
       )
     )
     parsed <- parse_type_to_domain_dataset(domain)
@@ -135,6 +141,13 @@ download_data <- function(
       end_date = end_date,
       ...
     )
+  } else if (domain == "pseudo") {
+    processed_data <- simulate_pseudo_data(
+      dataset = dataset,
+      start_date = start_date,
+      end_date = end_date,
+      ...
+    )
   } else if (domain == "constituents") {
     processed_data <- download_data_constituents(...)
   } else if (domain == "fred") {
@@ -170,8 +183,6 @@ download_data <- function(
         ...
       )
     }
-  } else {
-    cli::cli_abort("Unsupported domain: {.val {domain}}")
   }
 
   processed_data
@@ -179,53 +190,53 @@ download_data <- function(
 #' Check if a string is a legacy type
 #' @noRd
 is_legacy_type <- function(x) {
-  # These strings are valid domain names, not legacy types
+  # These strings are valid domain names, not legacy datasets
   valid_domains <- c("constituents", "fred", "stock_prices", "osap")
   if (x %in% valid_domains) {
     return(FALSE)
   }
 
   # Check all known legacy type patterns
-  ff_types <- dplyr::bind_rows(
-    list_supported_types_ff(),
-    list_supported_types_ff_legacy()
+  ff_datasets <- dplyr::bind_rows(
+    list_supported_datasets_ff(),
+    list_supported_datasets_ff_legacy()
   )
-  q_types <- list_supported_types_q()
-  macro_types <- list_supported_types_macro_predictors()
-  wrds_types <- list_supported_types_wrds()
-  other_types <- list_supported_types_other() |>
+  q_datasets <- list_supported_datasets_q()
+  macro_datasets <- list_supported_datasets_macro_predictors()
+  wrds_datasets <- list_supported_datasets_wrds()
+  other_datasets <- list_supported_datasets_other() |>
     dplyr::filter(.data$domain != "tidyfinance", .data$type != "osap")
 
-  all_types <- dplyr::bind_rows(
-    ff_types,
-    q_types,
-    macro_types,
-    wrds_types,
-    other_types
+  all_datasets <- dplyr::bind_rows(
+    ff_datasets,
+    q_datasets,
+    macro_datasets,
+    wrds_datasets,
+    other_datasets
   )
 
-  x %in% all_types$type
+  x %in% all_datasets$type
 }
 
 #' Parse legacy type parameter to domain and dataset
 #' @noRd
 parse_type_to_domain_dataset <- function(type) {
-  # Check Fama-French types (both current and legacy)
-  ff_types <- dplyr::bind_rows(
-    list_supported_types_ff(),
-    list_supported_types_ff_legacy()
+  # Check Fama-French datasets (both current and legacy)
+  ff_datasets <- dplyr::bind_rows(
+    list_supported_datasets_ff(),
+    list_supported_datasets_ff_legacy()
   )
 
-  if (type %in% ff_types$type) {
-    dataset_name <- ff_types$dataset_name[ff_types$type == type]
+  if (type %in% ff_datasets$type) {
+    dataset_name <- ff_datasets$dataset_name[ff_datasets$type == type]
     return(list(domain = "factors_ff", dataset = dataset_name))
   }
 
   # Global Q factors: "factors_q5_*" -> domain = "factors_q"
-  q_types <- list_supported_types_q()
+  q_datasets <- list_supported_datasets_q()
 
-  if (type %in% q_types$type) {
-    dataset_name <- q_types$dataset_name[q_types$type == type]
+  if (type %in% q_datasets$type) {
+    dataset_name <- q_datasets$dataset_name[q_datasets$type == type]
     return(list(
       domain = "factors_q",
       dataset = gsub("\\.csv$", "", dataset_name)
@@ -233,16 +244,16 @@ parse_type_to_domain_dataset <- function(type) {
   }
 
   # Macro predictors: "macro_predictors_*" -> domain = "macro_predictors"
-  macro_types <- list_supported_types_macro_predictors()
+  macro_datasets <- list_supported_datasets_macro_predictors()
 
-  if (type %in% macro_types$type) {
+  if (type %in% macro_datasets$type) {
     dataset <- sub("^macro_predictors_", "", type)
     return(list(domain = "macro_predictors", dataset = dataset))
   }
 
-  wrds_types <- list_supported_types_wrds()
+  wrds_datasets <- list_supported_datasets_wrds()
 
-  if (type %in% wrds_types$type) {
+  if (type %in% wrds_datasets$type) {
     dataset <- sub("^wrds_", "", type)
     return(list(domain = "wrds", dataset = dataset))
   }
@@ -253,7 +264,7 @@ parse_type_to_domain_dataset <- function(type) {
     return(list(domain = "tidyfinance", dataset = dataset))
   }
 
-  # Simple domain-only types (no dataset component)
+  # Simple domain-only datasets (no dataset component)
   simple_domains <- c("constituents", "fred", "stock_prices", "osap")
   if (type %in% simple_domains) {
     return(list(domain = type, dataset = NULL))
@@ -261,7 +272,7 @@ parse_type_to_domain_dataset <- function(type) {
 
   cli::cli_abort(c(
     "Cannot parse legacy type: {.val {type}}",
-    "i" = "Use {.fn list_supported_types} to see available types."
+    "i" = "Use {.fn list_supported_datasets} to see available datasets."
   ))
 }
 
@@ -275,6 +286,7 @@ check_supported_domain <- function(domain) {
     "factors_q",
     "macro_predictors",
     "wrds",
+    "pseudo",
     "constituents",
     "fred",
     "stock_prices",
