@@ -1,7 +1,5 @@
 #' Join Lagged Variable Values over a Date Range
 #'
-#' @description `r lifecycle::badge('experimental')`
-#'
 #' Joins lagged values of selected variables from one dataset (`new_data`)
 #' into another (`original_data`), based on date ranges defined by `min_lag`
 #' and `max_lag`. Unlike [add_lagged_columns()], this function supports
@@ -60,6 +58,10 @@ join_lagged_values <- function(
   ff_adjustment = FALSE,
   data_options = NULL
 ) {
+  # To avoid undefined global variable notes in checks, the columns and the
+  # closest() helper used in the join_by() below are defined explicitly here.
+  .date <- .lower <- .upper <- closest <- NULL
+
   if (is.null(data_options)) {
     data_options <- data_options()
   }

@@ -5,8 +5,10 @@
 
 <!-- badges: start -->
 
-[![](https://www.r-pkg.org/badges/version/tidyfinance)](https://cran.r-project.org/package=tidyfinance)
-[![](http://cranlogs.r-pkg.org/badges/grand-total/tidyfinance)](https://cran.r-project.org/package=tidyfinance)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/tidyfinance)](https://CRAN.R-project.org/package=tidyfinance)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/tidyfinance)](https://cran.r-project.org/package=tidyfinance)
 [![Project Status: Active - The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
@@ -61,7 +63,7 @@ Library](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.ht
 
 ``` r
 download_data(
-  domain = "factors_ff",
+  domain = "Fama-French",
   dataset = "Fama/French 5 Factors (2x3) [Daily]",
   start_date = "2000-01-01",
   end_date = "2020-12-31"
@@ -87,7 +89,7 @@ relevant file name:
 
 ``` r
 download_data(
-  domain = "factors_q",
+  domain = "Global Q",
   dataset = "q5_factors_monthly_2024",
   start_date = "2000-01-01",
   end_date = "2020-12-31"
@@ -113,7 +115,7 @@ monthly, quarterly, or annual frequency:
 
 ``` r
 download_data(
-  domain = "macro_predictors",
+  domain = "Goyal-Welch",
   dataset = "monthly",
   start_date = "2000-01-01",
   end_date = "2020-12-31"
@@ -140,7 +142,7 @@ Pricing](https://www.openassetpricing.com/) (OSAP):
 
 ``` r
 download_data(
-  domain = "osap",
+  domain = "Open Source Asset Pricing",
   start_date = "2020-01-01",
   end_date = "2020-12-31"
 )
@@ -173,7 +175,7 @@ To download multiple series from the Federal Reserve Economic Data
 
 ``` r
 download_data(
-  domain = "fred",
+  domain = "FRED",
   series = c("GDP", "CPIAUCNS"),
   start_date = "2020-01-01",
   end_date = "2020-12-31"
@@ -203,7 +205,7 @@ To download stock prices from Yahoo Finance:
 
 ``` r
 download_data(
-  domain = "stock_prices",
+  domain = "Stock Prices",
   symbols = c("AAPL", "MSFT"),
   start_date = "2020-01-01",
   end_date = "2020-12-31"
@@ -229,7 +231,7 @@ on Hugging Face:
 
 ``` r
 download_data(
-  domain = "tidyfinance",
+  domain = "Tidy Finance",
   dataset = "high_frequency_sp500",
   start_date = "2007-07-26",
   end_date = "2007-07-27"
@@ -264,7 +266,7 @@ To download monthly CRSP data:
 
 ``` r
 download_data(
-  domain = "wrds",
+  domain = "WRDS",
   dataset = "crsp_monthly",
   start_date = "2020-01-01",
   end_date = "2020-12-31"
@@ -291,7 +293,7 @@ To download annual (or quaterly) Compustat data:
 
 ``` r
 download_data(
-  domain = "wrds",
+  domain = "WRDS",
   dataset = "compustat_annual",
   start_date = "2020-01-01",
   end_date = "2020-12-31"
@@ -319,7 +321,7 @@ To download the CRSP-Compustat linking table:
 
 ``` r
 download_data(
-  domain = "wrds",
+  domain = "WRDS",
   dataset = "ccm_links"
 )
 #> # A tibble: 33,324 × 4
@@ -329,7 +331,7 @@ download_data(
 #>  2  10015 001001 1983-09-20 1986-07-31
 #>  3  10023 001002 1972-12-14 1973-06-05
 #>  4  10031 001003 1983-12-07 1989-08-16
-#>  5  54594 001004 1972-04-24 2026-05-31
+#>  5  54594 001004 1972-04-24 2026-06-22
 #>  6  61903 001005 1973-01-31 1983-01-31
 #>  7  10058 001007 1973-10-01 1979-01-30
 #>  8  10058 001007 1979-01-31 1984-09-28
@@ -342,7 +344,7 @@ To download Enhanced TRACE data for selected bonds:
 
 ``` r
 download_data(
-  domain = "wrds",
+  domain = "WRDS",
   dataset = "trace_enhanced",
   cusips = c("00101JAH9"),
   start_date = "2019-01-01",
@@ -373,7 +375,7 @@ Face:
 
 ``` r
 download_data(
-  domain = "tidyfinance",
+  domain = "Tidy Finance",
   dataset = "factor_library",
   sorting_variable = "ag"
 )
