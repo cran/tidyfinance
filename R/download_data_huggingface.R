@@ -356,14 +356,22 @@ filter_factor_library_grid <- function(..., fill_all = FALSE) {
     ))
   }
 
+  # Capture the names the user actually supplied before filling defaults.
+  # `list(x = NULL)` keeps `x` in `names()`, so this distinguishes a column
+  # the user omitted from one they explicitly set to `NULL`.
+  user_supplied <- names(filters)
+
   if (!fill_all) {
     for (col in names(defaults)) {
-      if (!col %in% names(filters)) {
+      if (!col %in% user_supplied) {
         filters[col] <- list(defaults[[col]])
       }
     }
 
-    if (is.null(filters[["n_portfolios_secondary"]])) {
+    # Only default `n_portfolios_secondary` to NA when the user did not
+    # supply the argument at all. An explicit `NULL` removes the filter
+    # (returning all values), consistent with every other column.
+    if (!("n_portfolios_secondary" %in% user_supplied)) {
       sorting_methods <- filters[["sorting_method"]]
       if (!all(sorting_methods == "univariate")) {
         cli::cli_abort(c(
@@ -381,10 +389,7 @@ filter_factor_library_grid <- function(..., fill_all = FALSE) {
     }
   }
 
-  result <- download_factor_library_grid() |>
-    dplyr::mutate(
-      sorting_variable = sub("sv_", "", .data$sorting_variable)
-    )
+  result <- download_factor_library_grid()
 
   filters <- purrr::compact(filters)
 
@@ -488,7 +493,6 @@ download_factor_library_ids <- function(ids) {
   id_grid <- download_factor_library_grid() |>
     dplyr::inner_join(id_values, by = "id") |>
     dplyr::mutate(
-      sorting_variable = sub("sv_", "", .data$sorting_variable),
       n_portfolios_main = as.character(.data$n_portfolios_main)
     ) |>
     dplyr::left_join(
