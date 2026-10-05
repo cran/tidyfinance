@@ -112,44 +112,49 @@ get_available_huggingface_files <- function(organization, dataset) {
 #' Supported columns and their defaults for `...`:
 #'   \itemize{
 #'     \item `sorting_variable`: **Required.** The firm characteristic used
-#'       to sort stocks into portfolios (e.g., `"me"` for market equity,
-#'       `"bm"` for book-to-market). No default is applied.
+#'       to sort stocks into portfolios, named like the Open Source Asset
+#'       Pricing signals (e.g., `"size"` for market equity, `"bm"` for
+#'       book-to-market). See [download_factor_library_grid()] for all
+#'       values. No default is applied.
 #'     \item `min_size_quantile` (defaults to `0.2`): Fraction of the smallest
 #'       stocks (by market cap) excluded from the portfolio universe. `0.2`
 #'       drops the bottom 20%.
 #'     \item `exclude_financials` (defaults to `FALSE`): Whether to drop
-#'       financial-sector stocks (SIC 6000-6999) from the universe.
+#'       financial-sector stocks (SIC 6000-6799) from the universe.
 #'     \item `exclude_utilities` (default: `FALSE`): Whether to drop
 #'       utility-sector stocks (SIC 4900-4999) from the universe.
 #'     \item `exclude_negative_earnings` (defaults to `FALSE`): Whether to
 #'       drop firms with negative earnings before sorting.
 #'     \item `sorting_variable_lag` (defaults to `"6m"`): Lag applied to the
-#'       sorting variable before portfolio assignment (e.g., `"6m"` = 6-month
-#'       lag).
+#'       sorting variable before portfolio assignment: `"1m"` (the timing of
+#'       Open Source Asset Pricing), `"3m"`, `"6m"`, or `"ff"`
+#'       (Fama-French).
 #'     \item `rebalancing` (defaults to `"monthly"`): How frequently portfolios
 #'       are reformed: `"monthly"` or `"annual"`.
 #'     \item `n_portfolios_main` (defaults to `10`): Number of quantile groups
 #'       (e.g., `10` for decile portfolios).
 #'     \item `sorting_method` (defaults to `"univariate"`): Whether portfolios
-#'       are formed on a single sort (`"univariate"`) or a sequential double
-#'       sort (`"sequential"`).
-#'     \item `n_portfolios_secondary` (defaults to `NULL`): Number of groups
-#'       for the secondary sort variable.
+#'       are formed on a single sort (`"univariate"`) or on a double sort with
+#'       size as the second variable (`"bivariate-dependent"` or
+#'       `"bivariate-independent"`).
+#'     \item `n_portfolios_secondary` (defaults to `NULL`): Number of size
+#'       groups for the secondary sort.
 #'       Required when `sorting_method` is not `"univariate"`.
 #'     \item `breakpoints_exchanges` (defaults to: `"NYSE"`): Exchange(s) used
 #'       to compute breakpoints. `"NYSE"` uses only NYSE-listed stocks to
 #'       define quantile cutoffs (the conventional Fama-French approach).
-#'     \item `breakpoints_min_size_threshold` (defaults to `NULL`): Minimum
-#'       market-cap threshold (in USD) applied when computing breakpoints.
-#'       `NULL` means no minimum-size screen is applied.
+#'     \item `breakpoints_min_size_threshold` (defaults to `NA`): Minimum
+#'       size quantile of the stocks that set the main breakpoints (e.g.,
+#'       `0.2`). `NA` means no minimum-size screen is applied.
 #'     \item `weighting_scheme` (defaults to `"VW"`): Return weighting within
-#'       portfolios: `"VW"` for value-weighted or `"EW"` for equal-weighted.
+#'       portfolios: `"VW"` for value-weighted, `"EW"` for equal-weighted, or
+#'       `"capped VW"` for value-weighted with capped weights.
 #'   }
 #'
 #' @returns A tibble with the downloaded data. For `"high_frequency_sp500"`,
 #'   contains 5-second aggregated orderbook snapshots filtered to the requested
-#'   date range. For `"factor_library"`, contains portfolio return data joined
-#'   with the full grid metadata for the matched portfolio IDs.
+#'   date range. For `"factor_library"`, contains the columns `id`, `date`, and
+#'   `ret` joined with the full grid metadata for the matched portfolio IDs.
 #'
 #' @family download functions
 #' @export
@@ -161,15 +166,15 @@ get_available_huggingface_files <- function(organization, dataset) {
 #'   )
 #'   download_data_huggingface(
 #'     "factor_library",
-#'     sorting_variable = "52w",
+#'     sorting_variable = "high52",
 #'     rebalancing = "annual"
 #'   )
 #'   download_data_huggingface(
-#'     "factor_library", sorting_variable = "ag", fill_all = TRUE
+#'     "factor_library", sorting_variable = "assetgrowth", fill_all = TRUE
 #'   )
 #'   download_data_huggingface(
 #'     "factor_library",
-#'     sorting_variable = "me",
+#'     sorting_variable = "size",
 #'     start_date = "2000-01-01",
 #'     end_date = "2020-12-31"
 #'   )
@@ -194,14 +199,9 @@ download_data_huggingface <- function(
 
   # Handle legacy type passed as dataset argument
   if (!is.null(dataset) && is_legacy_type_hf(dataset)) {
-    lifecycle::deprecate_warn(
-      when = "0.5.0",
-      what = "download_data_huggingface(type)",
-      details = paste0(
-        "The `type` argument is deprecated. ",
-        "Use `dataset` instead (e.g., 'high_frequency_sp500' instead of",
-        "'hf_high_frequency_sp500')."
-      )
+    deprecate_legacy_dataset(
+      dataset,
+      sub("^hf_", "", dataset)
     )
     dataset <- sub("^hf_", "", dataset)
   }
@@ -412,6 +412,14 @@ filter_factor_library_grid <- function(..., fill_all = FALSE) {
 #' Equivalent to calling
 #' `download_data("Tidy Finance", "factor_library_grid")`.
 #'
+#' The grid is downloaded once per R session and cached in memory, so repeated
+#' calls (including those made by [download_factor_library_ids()] and
+#' `download_data("Tidy Finance", "factor_library", ...)`) reuse it. Set
+#' `refresh = TRUE` to download it again.
+#'
+#' @param refresh Logical(1). If `TRUE`, the grid is downloaded again and
+#'   replaces the copy cached in the current session. Defaults to `FALSE`.
+#'
 #' @returns A tibble with one row per portfolio construction in the factor
 #'   library, including the integer `id` column used by
 #'   [download_factor_library_ids()].
@@ -423,25 +431,40 @@ filter_factor_library_grid <- function(..., fill_all = FALSE) {
 #' \dontrun{
 #'   download_factor_library_grid()
 #' }
-download_factor_library_grid <- function() {
-  get_available_huggingface_files(
-    "tidy-finance",
-    "factor-library-grid"
-  ) |>
-    dplyr::pull(.data$url) |>
-    read_parquet_url()
+download_factor_library_grid <- function(refresh = FALSE) {
+  if (!isFALSE(refresh) && !isTRUE(refresh)) {
+    cli::cli_abort("{.arg refresh} must be {.code TRUE} or {.code FALSE}.")
+  }
+
+  if (refresh || is.null(factor_library_cache$grid)) {
+    # The repo also holds one slice of the grid per sorting variable and the
+    # list of sorting variables, so the grid is read by its file name instead
+    # of from the file listing of the repo.
+    factor_library_cache$grid <- read_parquet_url(paste0(
+      "https://huggingface.co/datasets/tidy-finance/factor-library-grid/",
+      "resolve/main/portfolio_sort_grid.parquet"
+    ))
+  }
+
+  factor_library_cache$grid
 }
+
+#' Session cache for the factor library grid
+#'
+#' The grid has more than four million rows, so it is downloaded at most once
+#' per session by `download_factor_library_grid()`.
+#' @noRd
+factor_library_cache <- new.env(parent = emptyenv())
 
 #' Download factor library returns for a vector of portfolio IDs
 #'
 #' Given a vector of portfolio IDs from the `tidy-finance/factor-library-grid`
 #' Hugging Face dataset, downloads the corresponding return data from the
-#' `tidy-finance/factor-library` dataset on Hugging Face. The function
-#' identifies the unique `(sorting_variable, sorting_variable_lag,
-#' sorting_method, n_portfolios_main)` combinations for the requested IDs,
-#' downloads one parquet file per combination in full, and then inner-joins
-#' to retain only the requested IDs. The grid metadata is joined back onto
-#' the result.
+#' `tidy-finance/factor-library` dataset on Hugging Face. The returns are
+#' stored in files of 1,000 consecutive IDs named after the range they cover
+#' (e.g., `id_0000001-0001000.parquet`), so the function downloads only the
+#' files that hold the requested IDs. The grid metadata is joined onto the
+#' result.
 #'
 #' Use this function when you already know the portfolio IDs you want (for
 #' example, from a previous call to [download_data_huggingface()] with
@@ -449,14 +472,18 @@ download_factor_library_grid <- function() {
 #' (sorting variable, weighting scheme, breakpoints, etc.) and download in
 #' a single call, use [download_data_huggingface()] instead.
 #'
-#' Raises an error if `ids` is empty or contains IDs that cannot be matched
-#' to a parquet file (listing the affected IDs and their key columns).
+#' Raises an error if none of the requested IDs exist in the grid. IDs whose
+#' portfolio sort produced no portfolios have no returns; they are absent from
+#' the result, with a warning, and the result has no rows if none of the
+#' requested IDs has returns. Returns are stored in single precision, and
+#' months without a valid long-short return are stored as `0`.
 #'
 #' @param ids Integer or numeric vector of portfolio IDs to download. IDs
 #'   correspond to rows of the `tidy-finance/factor-library-grid` dataset.
 #'
-#' @returns A tibble of portfolio returns with the grid metadata columns for
-#'   the requested IDs appended.
+#' @returns A tibble with the columns `id`, `date`, and `ret` (the monthly
+#'   long-short excess return) and the grid metadata columns for the
+#'   requested IDs.
 #'
 #' @family download functions
 #' @export
@@ -466,57 +493,12 @@ download_factor_library_grid <- function() {
 #'   download_factor_library_ids(c(1L, 2L, 3L))
 #' }
 download_factor_library_ids <- function(ids) {
-  organization <- "tidy-finance"
-  dataset_name <- "factor-library"
-
-  available_files <- get_available_huggingface_files(
-    organization,
-    dataset_name
-  ) |>
-    tidyr::extract(
-      col = "path",
-      into = c(
-        "sorting_variable",
-        "sorting_variable_lag",
-        "sorting_method",
-        "n_portfolios_main"
-      ),
-      regex = paste0(
-        "sorting_variable=([^/]+)/sorting_variable_lag=([^/]+)",
-        "/sorting_method=([^/]+)/n_portfolios_main=([^/]+)/"
-      ),
-      remove = FALSE
-    )
-
-  id_values <- data.frame(id = ids)
-
   id_grid <- download_factor_library_grid() |>
-    dplyr::inner_join(id_values, by = "id") |>
-    dplyr::mutate(
-      n_portfolios_main = as.character(.data$n_portfolios_main)
-    ) |>
-    dplyr::left_join(
-      available_files,
-      by = c(
-        "sorting_variable",
-        "sorting_variable_lag",
-        "sorting_method",
-        "n_portfolios_main"
-      )
-    )
+    dplyr::filter(.data$id %in% ids)
 
-  relevant_urls <- id_grid |>
-    dplyr::distinct(
-      .data$url,
-      .data$sorting_variable,
-      .data$sorting_variable_lag,
-      .data$sorting_method,
-      .data$n_portfolios_main
-    )
-
-  if (nrow(relevant_urls) == 0) {
+  if (nrow(id_grid) == 0) {
     cli::cli_abort(c(
-      "No parquet files found for the requested portfolio IDs.",
+      "None of the requested portfolio IDs exist in the factor library grid.",
       "i" = paste(
         "Check that the provided {.arg ids} are valid",
         "and exist in the factor library grid."
@@ -524,64 +506,60 @@ download_factor_library_ids <- function(ids) {
     ))
   }
 
-  missing_urls <- relevant_urls |>
-    dplyr::filter(is.na(.data$url))
+  urls <- paste0(
+    "https://huggingface.co/datasets/tidy-finance/factor-library/",
+    "resolve/main/",
+    unique(factor_library_file(id_grid$id))
+  )
 
-  if (nrow(missing_urls) > 0) {
-    missing_keys <- missing_urls |> # nolint: object_usage_linter
-      dplyr::inner_join(
-        id_grid |>
-          dplyr::select(
-            "id",
-            "sorting_variable",
-            "sorting_variable_lag",
-            "sorting_method",
-            "n_portfolios_main"
-          ),
-        by = c(
-          "sorting_variable",
-          "sorting_variable_lag",
-          "sorting_method",
-          "n_portfolios_main"
-        )
-      ) |>
-      dplyr::mutate(
-        key = paste0(
-          "id=",
-          .data$id,
-          " (",
-          .data$sorting_variable,
-          " / ",
-          .data$sorting_variable_lag,
-          " / ",
-          .data$sorting_method,
-          " / ",
-          .data$n_portfolios_main,
-          ")"
-        )
-      ) |>
-      dplyr::pull(.data$key)
+  # The library has no file for a range of IDs in which no portfolio sort
+  # produced portfolios, so the request for such a file fails with HTTP 404
+  returns <- purrr::map(
+    urls,
+    \(url) tryCatch(read_parquet_url(url), httr2_http_404 = \(cnd) NULL)
+  ) |>
+    dplyr::bind_rows()
+  # Without any file, there are no columns to join the grid onto
+  if (ncol(returns) == 0) {
+    returns <- tibble::tibble(
+      id = id_grid$id[0],
+      date = as.Date(character()),
+      ret = double()
+    )
+  }
 
-    cli::cli_abort(c(
-      "No parquet file found for {length(missing_keys)} portfolio ID{?s}.",
-      "x" = "Affected ID{?s}: {.val {missing_keys}}",
-      "i" = paste(
-        "Check that the {.arg sorting_variable},",
-        "{.arg sorting_variable_lag}, {.arg sorting_method},",
-        "and {.arg n_portfolios_main} values exist in the factor library."
+  no_returns <- sort(setdiff(id_grid$id, returns$id))
+  if (length(no_returns) > 0) {
+    shown <- paste(
+      no_returns[seq_len(min(5, length(no_returns)))],
+      collapse = ", "
+    )
+    if (length(no_returns) > 5) {
+      shown <- paste0(
+        shown, ", ... (", format(length(no_returns), big.mark = ","), " IDs)"
       )
+    }
+    cli::cli_warn(paste(
+      "Portfolio IDs without returns in the factor library, because their",
+      "portfolio sort produced no portfolios, are absent from the result:",
+      "{shown}."
     ))
   }
 
-  relevant_files <- relevant_urls$url |>
-    purrr::map(~ read_parquet_url(.x)) |>
-    dplyr::bind_rows()
+  dplyr::inner_join(returns, id_grid, by = "id")
+}
 
-  relevant_files |>
-    dplyr::inner_join(
-      id_grid |> dplyr::select(-c("url", "path", "size")),
-      by = "id"
-    )
+#' Name of the factor library file that holds a portfolio ID
+#'
+#' The returns are cut into files of 1,000 consecutive IDs named after the
+#' range they cover, so the file follows from the ID alone.
+#'
+#' @param id Integer or numeric vector of portfolio IDs.
+#' @returns A character vector of file names.
+#' @noRd
+factor_library_file <- function(id) {
+  id_first <- (id - 1) %/% 1000 * 1000 + 1
+  sprintf("id_%07d-%07d.parquet", id_first, id_first + 999)
 }
 
 #' Download factor library data from Hugging Face

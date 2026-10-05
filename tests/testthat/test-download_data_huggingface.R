@@ -18,6 +18,32 @@ make_grid <- function(id = 1L) {
   )
 }
 
+# Returns file with the columns of the factor library files on the Hub.
+make_returns <- function(id, ret = 0.01) {
+  tibble::tibble(id = id, date = as.Date("2020-01-01"), ret = ret)
+}
+
+# Stands in for read_parquet_url(), serving `files` by file name. A file not in
+# `files` raises the error httr2 raises when the Hub has no such file (HTTP
+# 404), as for a range of ids in which no portfolio sort produced portfolios.
+serve_files <- function(files) {
+  function(url) {
+    file <- files[[basename(url)]]
+    if (is.null(file)) {
+      httr2::resp_check_status(httr2::response(status_code = 404L))
+    }
+    file
+  }
+}
+
+# Empties the session cache of the factor library grid for one test and
+# restores its previous content afterwards.
+local_empty_factor_library_cache <- function(env = parent.frame()) {
+  old <- factor_library_cache$grid
+  factor_library_cache$grid <- NULL
+  withr::defer(factor_library_cache$grid <- old, envir = env)
+}
+
 # Mocks the full httr2 chain + jsonlite::fromJSON for one page.
 # page_df is passed straight through fromJSON so the rest of
 # the pipeline (tibble(), filter(), select()) runs for real.
@@ -130,7 +156,10 @@ test_that("legacy hf_ dataset value warns and strips prefix", {
     download_data_huggingface(
       dataset = "hf_factor_library_grid"
     ),
-    regexp = "deprecated"
+    regexp = paste0(
+      '`dataset = "hf_factor_library_grid"`.*',
+      '`dataset = "factor_library_grid"`'
+    )
   )
 })
 
@@ -349,38 +378,120 @@ test_that("explicit n_portfolios_secondary = NULL returns all values", {
 
 # ── download_factor_library_grid ─────────────────────
 
-test_that("pulls url from available files and reads parquet", {
-  available <- tibble::tibble(
-    path = "grid.parquet",
-    size = 500L,
-    url = "https://example.com/grid.parquet"
-  )
+test_that("reads the grid file by name", {
   mock_grid <- tibble::tibble(id = 1L)
+  requested <- character(0)
+  local_empty_factor_library_cache()
 
   testthat::local_mocked_bindings(
-    get_available_huggingface_files = function(...) available
-  )
-  testthat::local_mocked_bindings(
-    read_parquet_url = function(...) mock_grid
+    # The repo also holds slices of the grid, so its file listing must not
+    # decide which file is read
+    get_available_huggingface_files = function(...) {
+      stop("The file listing of the grid repo must not be queried.")
+    },
+    read_parquet_url = function(url) {
+      requested <<- c(requested, url)
+      mock_grid
+    }
   )
 
   expect_equal(download_factor_library_grid(), mock_grid)
+  expect_equal(
+    requested,
+    paste0(
+      "https://huggingface.co/datasets/tidy-finance/factor-library-grid/",
+      "resolve/main/portfolio_sort_grid.parquet"
+    )
+  )
+})
+
+test_that("caches the grid within the session", {
+  local_empty_factor_library_cache()
+  n_downloads <- 0L
+  testthat::local_mocked_bindings(
+    read_parquet_url = function(...) {
+      n_downloads <<- n_downloads + 1L
+      make_grid(n_downloads)
+    }
+  )
+
+  first <- download_factor_library_grid()
+  second <- download_factor_library_grid()
+
+  expect_equal(n_downloads, 1L)
+  expect_identical(second, first)
+})
+
+test_that("refresh = TRUE downloads the grid again", {
+  local_empty_factor_library_cache()
+  n_downloads <- 0L
+  testthat::local_mocked_bindings(
+    read_parquet_url = function(...) {
+      n_downloads <<- n_downloads + 1L
+      make_grid(n_downloads)
+    }
+  )
+
+  download_factor_library_grid()
+  refreshed <- download_factor_library_grid(refresh = TRUE)
+
+  expect_equal(n_downloads, 2L)
+  expect_equal(refreshed$id, 2L)
+  expect_identical(download_factor_library_grid(), refreshed)
+})
+
+test_that("does not cache a failed download", {
+  local_empty_factor_library_cache()
+  testthat::local_mocked_bindings(
+    read_parquet_url = function(...) cli::cli_abort("network down")
+  )
+
+  expect_error(download_factor_library_grid(), "network down")
+  expect_null(factor_library_cache$grid)
+})
+
+test_that("aborts on an invalid refresh argument", {
+  expect_error(download_factor_library_grid(refresh = NA), "refresh")
+  expect_error(download_factor_library_grid(refresh = "yes"), "refresh")
+})
+
+test_that("download_factor_library_ids reuses the cached grid across calls", {
+  local_empty_factor_library_cache()
+  n_grid_downloads <- 0L
+  testthat::local_mocked_bindings(
+    read_parquet_url = function(url) {
+      if (basename(url) == "portfolio_sort_grid.parquet") {
+        n_grid_downloads <<- n_grid_downloads + 1L
+        make_grid(c(1L, 2L))
+      } else {
+        tibble::tibble(id = c(1L, 2L), date = as.Date("2020-01-01"), ret = 0)
+      }
+    }
+  )
+
+  download_factor_library_ids(1L)
+  download_factor_library_ids(2L)
+
+  expect_equal(n_grid_downloads, 1L)
 })
 
 # ── download_factor_library_ids ──────────────────────
 
+test_that("factor_library_file names the 1,000-id file of each id", {
+  expect_equal(
+    factor_library_file(c(1L, 1000L, 1001L, 4105728L)),
+    c(
+      "id_0000001-0001000.parquet",
+      "id_0000001-0001000.parquet",
+      "id_0001001-0002000.parquet",
+      "id_4105001-4106000.parquet"
+    )
+  )
+})
+
 test_that("aborts when no grid rows match requested ids", {
-  # make_grid(42L) has id = 42; requesting id = 999 yields an
-  # empty inner_join, so relevant_urls is empty.
   testthat::local_mocked_bindings(
-    download_factor_library_grid = function() make_grid(42L),
-    get_available_huggingface_files = function(...) {
-      tibble::tibble(
-        path = character(0),
-        size = numeric(0),
-        url = character(0)
-      )
-    }
+    download_factor_library_grid = function() make_grid(42L)
   )
 
   expect_error(
@@ -389,55 +500,113 @@ test_that("aborts when no grid rows match requested ids", {
   )
 })
 
-test_that("aborts when ids have no matching parquet file", {
-  # The available path "unrelated/data.parquet" does not match
-  # the regex in tidyr::extract, so all key columns are NA and
-  # the left_join leaves url = NA for the matched grid row.
+test_that("downloads the files that hold the ids and joins grid metadata", {
+  files <- list(
+    "id_0000001-0001000.parquet" = tibble::tibble(
+      id = c(1L, 2L),
+      date = as.Date("2020-01-01"),
+      ret = c(0.01, 0.02)
+    ),
+    "id_0001001-0002000.parquet" = tibble::tibble(
+      id = 1001L,
+      date = as.Date("2020-01-01"),
+      ret = 0.03
+    )
+  )
+  requested <- character(0)
   testthat::local_mocked_bindings(
-    download_factor_library_grid = function() make_grid(1L),
-    get_available_huggingface_files = function(...) {
-      tibble::tibble(
-        path = "unrelated/data.parquet",
-        size = 100L,
-        url = "https://example.com/unrelated/data.parquet"
-      )
+    download_factor_library_grid = function() make_grid(c(1L, 1001L)),
+    read_parquet_url = function(url) {
+      requested <<- c(requested, url)
+      files[[basename(url)]]
     }
   )
 
-  expect_error(
-    download_factor_library_ids(1L),
-    class = "rlang_error"
+  expect_no_warning(result <- download_factor_library_ids(c(1L, 1001L)))
+
+  expect_equal(
+    requested,
+    paste0(
+      "https://huggingface.co/datasets/tidy-finance/factor-library/",
+      "resolve/main/",
+      names(files)
+    )
   )
+  expect_equal(result$id, c(1L, 1001L))
+  expect_equal(result$ret, c(0.01, 0.03))
+  expect_true("weighting_scheme" %in% names(result))
 })
 
-test_that("downloads returns and joins grid metadata", {
-  fpath <- paste0(
-    "sorting_variable=me/",
-    "sorting_variable_lag=6m/",
-    "sorting_method=univariate/",
-    "n_portfolios_main=10/",
-    "data.parquet"
-  )
-  mock_returns <- tibble::tibble(id = 1L, ret = 0.01)
-
+test_that("skips a file missing on the Hub and warns about its ids", {
+  # The Hub has no file for the range of id 1001, as when none of the
+  # portfolio sorts in the range produced portfolios
+  files <- list("id_0000001-0001000.parquet" = make_returns(1L))
+  requested <- character(0)
   testthat::local_mocked_bindings(
-    download_factor_library_grid = function() make_grid(1L),
-    get_available_huggingface_files = function(...) {
-      tibble::tibble(
-        path = fpath,
-        size = 100L,
-        url = paste0("https://example.com/", fpath)
-      )
+    download_factor_library_grid = function() make_grid(c(1L, 1001L)),
+    read_parquet_url = function(url) {
+      requested <<- c(requested, basename(url))
+      serve_files(files)(url)
     }
   )
+
+  expect_warning(
+    result <- download_factor_library_ids(c(1L, 1001L)),
+    "absent from the result: 1001\\.$"
+  )
+  expect_equal(
+    requested,
+    c("id_0000001-0001000.parquet", "id_0001001-0002000.parquet")
+  )
+  expect_equal(result$id, 1L)
+})
+
+test_that("raises HTTP errors other than a missing file", {
   testthat::local_mocked_bindings(
-    read_parquet_url = function(...) mock_returns
+    download_factor_library_grid = function() make_grid(1L),
+    read_parquet_url = function(url) {
+      httr2::resp_check_status(httr2::response(status_code = 503L))
+    }
   )
 
-  result <- download_factor_library_ids(1L)
+  expect_error(download_factor_library_ids(1L), class = "httr2_http_503")
+})
 
-  expect_true("ret" %in% names(result))
-  expect_true("weighting_scheme" %in% names(result))
+test_that("warns about ids without rows in the file that holds them", {
+  # Of ids 1 to 8, only id 1 has rows; the file also holds id 9, which was
+  # not requested
+  files <- list(
+    "id_0000001-0001000.parquet" = make_returns(c(1L, 9L), c(0.01, 0.09))
+  )
+  testthat::local_mocked_bindings(
+    download_factor_library_grid = function() make_grid(1:9),
+    read_parquet_url = serve_files(files)
+  )
+
+  # The warning lists the first five ids and counts them all
+  expect_warning(
+    result <- download_factor_library_ids(1:8),
+    "absent from the result: 2, 3, 4, 5, 6, \\.\\.\\. \\(7 IDs\\)\\.$"
+  )
+  expect_equal(result$id, 1L)
+  expect_equal(result$ret, 0.01)
+})
+
+test_that("returns no rows but all columns when no id has returns", {
+  testthat::local_mocked_bindings(
+    download_factor_library_grid = function() make_grid(c(1L, 1001L)),
+    read_parquet_url = serve_files(list())
+  )
+
+  expect_warning(
+    result <- download_factor_library_ids(c(1L, 1001L)),
+    "absent from the result: 1, 1001\\.$"
+  )
+  expect_equal(nrow(result), 0L)
+  expect_named(result, c("id", "date", "ret", names(make_grid())[-1]))
+  expect_type(result$id, "integer")
+  expect_s3_class(result$date, "Date")
+  expect_type(result$ret, "double")
 })
 
 # ── download_data_hugging_face_factor_library ────────

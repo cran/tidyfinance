@@ -11,17 +11,18 @@ download_factor_library_ids(ids)
 correspond to rows of the \code{tidy-finance/factor-library-grid} dataset.}
 }
 \value{
-A tibble of portfolio returns with the grid metadata columns for
-the requested IDs appended.
+A tibble with the columns \code{id}, \code{date}, and \code{ret} (the monthly
+long-short excess return) and the grid metadata columns for the
+requested IDs.
 }
 \description{
 Given a vector of portfolio IDs from the \code{tidy-finance/factor-library-grid}
 Hugging Face dataset, downloads the corresponding return data from the
-\code{tidy-finance/factor-library} dataset on Hugging Face. The function
-identifies the unique \verb{(sorting_variable, sorting_variable_lag, sorting_method, n_portfolios_main)} combinations for the requested IDs,
-downloads one parquet file per combination in full, and then inner-joins
-to retain only the requested IDs. The grid metadata is joined back onto
-the result.
+\code{tidy-finance/factor-library} dataset on Hugging Face. The returns are
+stored in files of 1,000 consecutive IDs named after the range they cover
+(e.g., \verb{id_0000001-0001000.parquet}), so the function downloads only the
+files that hold the requested IDs. The grid metadata is joined onto the
+result.
 }
 \details{
 Use this function when you already know the portfolio IDs you want (for
@@ -30,8 +31,11 @@ example, from a previous call to \code{\link[=download_data_huggingface]{downloa
 (sorting variable, weighting scheme, breakpoints, etc.) and download in
 a single call, use \code{\link[=download_data_huggingface]{download_data_huggingface()}} instead.
 
-Raises an error if \code{ids} is empty or contains IDs that cannot be matched
-to a parquet file (listing the affected IDs and their key columns).
+Raises an error if none of the requested IDs exist in the grid. IDs whose
+portfolio sort produced no portfolios have no returns; they are absent from
+the result, with a warning, and the result has no rows if none of the
+requested IDs has returns. Returns are stored in single precision, and
+months without a valid long-short return are stored as \code{0}.
 }
 \examples{
 \dontrun{
@@ -39,20 +43,21 @@ to a parquet file (listing the affected IDs and their key columns).
 }
 }
 \seealso{
-Other download functions: 
-\code{\link{download_data}()},
-\code{\link{download_data_constituents}()},
-\code{\link{download_data_factors_ff}()},
-\code{\link{download_data_factors_q}()},
-\code{\link{download_data_fred}()},
-\code{\link{download_data_huggingface}()},
-\code{\link{download_data_jkp}()},
-\code{\link{download_data_macro_predictors}()},
-\code{\link{download_data_osap}()},
-\code{\link{download_data_pastor_stambaugh}()},
-\code{\link{download_data_risk_free}()},
-\code{\link{download_data_stambaugh_yuan}()},
-\code{\link{download_data_stock_prices}()},
-\code{\link{download_factor_library_grid}()}
+Other download functions:
+\code{\link[=download_data]{download_data()}},
+\code{\link[=download_data_constituents]{download_data_constituents()}},
+\code{\link[=download_data_factors_ff]{download_data_factors_ff()}},
+\code{\link[=download_data_factors_q]{download_data_factors_q()}},
+\code{\link[=download_data_fred]{download_data_fred()}},
+\code{\link[=download_data_fred_md]{download_data_fred_md()}},
+\code{\link[=download_data_huggingface]{download_data_huggingface()}},
+\code{\link[=download_data_jkp]{download_data_jkp()}},
+\code{\link[=download_data_macro_predictors]{download_data_macro_predictors()}},
+\code{\link[=download_data_osap]{download_data_osap()}},
+\code{\link[=download_data_pastor_stambaugh]{download_data_pastor_stambaugh()}},
+\code{\link[=download_data_risk_free]{download_data_risk_free()}},
+\code{\link[=download_data_stambaugh_yuan]{download_data_stambaugh_yuan()}},
+\code{\link[=download_data_stock_prices]{download_data_stock_prices()}},
+\code{\link[=download_factor_library_grid]{download_factor_library_grid()}}
 }
 \concept{download functions}

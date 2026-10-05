@@ -59,6 +59,9 @@
 #' download_data("Goyal-Welch", "monthly", "2000-01-01", "2020-12-31")
 #' download_data("Index Constituents", index = "DAX")
 #' download_data("FRED", series = c("GDP", "CPIAUCNS"))
+#' download_data("FRED", "FRED-MD")
+#' download_data("FRED", "FRED-MD", transform = TRUE)
+#' download_data("FRED", "FRED-QD", vintage = "2020-03")
 #' download_data("Stock Prices", symbols = c("AAPL", "MSFT"))
 #' download_data(
 #'   "Tidy Finance",
@@ -75,7 +78,7 @@
 #' download_data(
 #'   "Tidy Finance",
 #'   "factor_library",
-#'   sorting_variable = "52w",
+#'   sorting_variable = "high52",
 #'   rebalancing = "annual"
 #' )
 #' download_data("Tidy Finance", "factor_library", ids = c(1L, 2L, 3L))
@@ -161,11 +164,16 @@ download_data <- function(
   } else if (domain == "Index Constituents") {
     processed_data <- download_data_constituents(...)
   } else if (domain == "FRED") {
-    processed_data <- download_data_fred(
-      start_date = start_date,
-      end_date = end_date,
-      ...
-    )
+    if (!is.null(dataset) && dataset %in% c("FRED-MD", "FRED-QD")) {
+      # Curated McCracken-Ng databases (selected by 'vintage', not date range).
+      processed_data <- download_data_fred_md(database = dataset, ...)
+    } else {
+      processed_data <- download_data_fred(
+        start_date = start_date,
+        end_date = end_date,
+        ...
+      )
+    }
   } else if (domain == "Stock Prices") {
     processed_data <- download_data_stock_prices(
       start_date = start_date,
@@ -217,6 +225,38 @@ download_data <- function(
 
   processed_data
 }
+
+#' Warn that a legacy type identifier was passed as `dataset`
+#'
+#' Legacy identifiers such as `"factors_ff_3_monthly"` are still accepted as
+#' values of `dataset`. The warning names the value and its replacement rather
+#' than the deprecated `type` argument, which the caller did not use.
+#'
+#' The value reaches the download function through `download_data()` or
+#' directly, so the user environment is the innermost calling frame outside
+#' the package. Otherwise lifecycle would blame the package for the value.
+#'
+#' @param legacy The legacy identifier passed as `dataset`.
+#' @param dataset The dataset name that replaces it.
+#' @noRd
+deprecate_legacy_dataset <- function(legacy, dataset) {
+  ns <- topenv(environment(deprecate_legacy_dataset))
+  user_env <- globalenv()
+  for (frame in rev(sys.frames())) {
+    if (!identical(topenv(frame), ns)) {
+      user_env <- frame
+      break
+    }
+  }
+
+  lifecycle::deprecate_warn(
+    when = "0.5.0",
+    what = I(paste0('`dataset = "', legacy, '"`')),
+    with = I(paste0('`dataset = "', dataset, '"`')),
+    user_env = user_env
+  )
+}
+
 #' Check if a string is a legacy type
 #' @noRd
 is_legacy_type <- function(x) {

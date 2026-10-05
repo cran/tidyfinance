@@ -27,8 +27,9 @@
 #'   summary statistics. If `FALSE` (default), the function returns only the
 #'   coefficient estimates. If `TRUE`, it returns a list with two elements:
 #'   `coefficients` (the usual estimates table) and `summary_statistics` (a
-#'   one-row tibble with the average cross-sectional R-squared and the average
-#'   number of observations per cross-section).
+#'   one-row tibble with the average cross-sectional R-squared, the average
+#'   cross-sectional adjusted R-squared, and the average number of
+#'   observations per cross-section).
 #'
 #' @returns If `detail = FALSE` (default), a tibble with columns
 #'   `factor`, `risk_premium`, `n` (number of time periods),
@@ -38,7 +39,8 @@
 #'   \describe{
 #'     \item{coefficients}{The same tibble described above.}
 #'     \item{summary_statistics}{A one-row tibble with `r_squared` (mean
-#'       cross-sectional R-squared) and `n_obs` (mean cross-sectional
+#'       cross-sectional R-squared), `adj_r_squared` (mean cross-sectional
+#'       adjusted R-squared), and `n_obs` (mean cross-sectional
 #'       observation count).}
 #'   }
 #'
@@ -116,8 +118,11 @@ estimate_fama_macbeth <- function(
     cli::cli_abort("The data must contain a {data_options$date} column.")
   }
 
+  # Newey-West standard errors depend on the order of the time series, so the
+  # cross-sections are sorted chronologically before they are aggregated.
   cross_sections <- data |>
     tidyr::nest(data = -all_of(data_options$date)) |>
+    arrange(.data[[data_options$date]]) |>
     mutate(
       row_check = purrr::map_lgl(
         data,

@@ -1,3 +1,93 @@
+# tidyfinance 0.9.0
+
+## Breaking changes
+
+- `download_factor_library_ids()` and
+  `download_data("Tidy Finance", "factor_library")` read the new layout of the
+  factor library on Hugging Face, where the returns hold only `id`, `date`, and
+  `ret` in files of 1,000 consecutive IDs named after their range. Only the
+  files that hold the requested IDs are downloaded, and the file listing of the
+  dataset is no longer queried. The result no longer has a `ret_type` column;
+  the weighting scheme is in the `weighting_scheme` column of the grid. Earlier
+  versions of the package cannot read the new layout.
+- The factor library now builds on the signals of Open Source Asset Pricing,
+  so sorting variables carry their names, e.g. `"size"` instead of `"me"` and
+  `"high52"` instead of `"52w"`. The examples and the documented grid values
+  follow the new release, which adds the `"1m"` lag and `"capped VW"`
+  weighting.
+
+## New features
+
+- `download_data_constituents()` gains a `path` argument that reads an iShares
+  or BlackRock holdings CSV saved from the fund's web page instead of
+  downloading it, e.g. `download_data("Index Constituents", path =
+  "holdings.csv")`. `index` is optional with `path`. Use it as a fallback when
+  the provider moves its files (#311).
+- Added `download_data_fred_md()` and the `"FRED-MD"` / `"FRED-QD"` datasets
+  for `download_data("FRED", ...)`, which download the McCracken and Ng
+  (2016, 2021) curated monthly / quarterly macro panels as wide tables (one
+  column per series). `transform = TRUE` applies each series' stationarity
+  transform code (tcode). `vintage` selects the current release (default), a
+  specific `"YYYY-MM"` release, or `"all"` - the full real-time panel across
+  every archived vintage (recent vintages are hosted individually; older ones
+  are read from the St. Louis Fed vintage archive ZIPs), enabling leak-free
+  point-in-time analysis.
+
+## Bug fixes
+
+- `download_data_constituents()` works again for DAX, EURO STOXX 50, Dow Jones
+  Industrial Average, S&P 500, Nasdaq 100, FTSE 100, MSCI World, STOXX Europe
+  600, MDAX, TecDAX, MSCI Emerging Markets, and MSCI Europe. iShares removed
+  the German retail pages the holdings files were downloaded from; they are now
+  read from the Swiss professional pages. The header row of a holdings file is
+  detected automatically instead of skipping a fixed number of rows, and a
+  failed download now names the index and the URL and points to `path`
+  (#311).
+- `download_factor_library_grid()` caches the grid of the factor library for
+  the rest of the session, so `download_factor_library_ids()` and
+  `download_data("Tidy Finance", "factor_library", ...)` no longer download the
+  grid of more than four million rows on every call (previously twice per
+  `download_data()` call when filtering). Use `refresh = TRUE` to download it
+  again.
+- Passing a legacy identifier such as `"factors_ff_3_monthly"` as `dataset`
+  now warns that this value is deprecated and names the dataset that replaces
+  it, e.g. `"Fama/French 3 Factors"`. The warning previously claimed that the
+  `type` argument was used, although the caller never passed it.
+- `estimate_fama_macbeth()` now orders the cross-sections chronologically
+  before aggregating them over time. Newey-West standard errors depend on the
+  order of the time series, so the same data in a different row order
+  previously returned different standard errors and t-statistics while the
+  risk premia were unchanged. Results for chronologically sorted input are
+  unaffected (#302).
+- The documentation of `estimate_fama_macbeth(detail = TRUE)` now lists the
+  `adj_r_squared` column, which the function has always returned in
+  `summary_statistics` alongside `r_squared` and `n_obs`.
+- `download_data_stock_prices()` now derives dates from the exchange time zone
+  reported by Yahoo Finance instead of converting the timestamps in UTC.
+  Timestamps refer to the market open in local time, so for exchanges ahead of
+  UTC (e.g. `"^AXJO"`, `"^NZ50"`) every observation was previously dated one
+  calendar day too early and could fall on a weekend.
+- `download_data_stock_prices()` now returns a range that is inclusive of both
+  `start_date` and `end_date` for every exchange, matching the other
+  `download_data_*()` functions. The range was previously delegated to Yahoo
+  Finance's `period1` / `period2`, which are resolved in the exchange's local
+  time zone, so `end_date` was excluded for markets at or behind UTC but
+  included for markets ahead of it.
+- `download_factor_library_grid()`, and with it
+  `download_data("Tidy Finance", "factor_library")`, now reads
+  `portfolio_sort_grid.parquet` by name instead of every Parquet file listed in
+  the grid repo, which also holds one slice of the grid per sorting variable
+  and the list of sorting variables. Reading the listing failed as soon as the
+  repo held more than one Parquet file.
+- `download_factor_library_ids()`, and with it
+  `download_data("Tidy Finance", "factor_library")`, no longer fails with
+  "HTTP 404 Not Found" for IDs in a range of 1,000 IDs for which the factor
+  library has no file because none of its portfolio sorts produced portfolios
+  (e.g., IDs 833001 to 835000, which hold `"rdcap"` sorts with
+  `min_size_quantile = 0.2`). Requested IDs without returns are absent from
+  the result, as documented, and a warning now lists them; if none of the
+  requested IDs has returns, the result is an empty tibble with all columns.
+
 # tidyfinance 0.8.0
   
 ## New features
@@ -5,13 +95,13 @@
 - Added `download_data_pastor_stambaugh()` and the `"Pastor-Stambaugh"` domain
   for `download_data()`, which downloads the liquidity factors of Pastor and
   Stambaugh (2003) from
-  Lubos Pastor's data library.
+  [Robert Stambaugh's data library](https://fnce.wharton.upenn.edu/profile/stambaug/#misc).
   The result carries the levels of aggregate liquidity, the non-traded
   liquidity factor (innovations), and the traded liquidity factor `LIQ_V`.
 - Added `download_data_stambaugh_yuan()` and the `"Stambaugh-Yuan"` domain for
   `download_data()`, which downloads the mispricing factors (`mgmt` and `perf`)
   of Stambaugh and Yuan (2017) from
-  [Robert Stambaugh's data library](https://finance.wharton.upenn.edu/~stambaug/).
+  [Robert Stambaugh's data library](https://fnce.wharton.upenn.edu/profile/stambaug/#misc).
   The `dataset` argument selects between `"monthly"` and `"daily"` data. The
   source files currently end in December 2016.
 - Added `download_data_jkp()` and the `"Global Factor Data"` domain

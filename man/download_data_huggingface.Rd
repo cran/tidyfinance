@@ -45,8 +45,8 @@ columns and their defaults.}
 \value{
 A tibble with the downloaded data. For \code{"high_frequency_sp500"},
 contains 5-second aggregated orderbook snapshots filtered to the requested
-date range. For \code{"factor_library"}, contains portfolio return data joined
-with the full grid metadata for the matched portfolio IDs.
+date range. For \code{"factor_library"}, contains the columns \code{id}, \code{date}, and
+\code{ret} joined with the full grid metadata for the matched portfolio IDs.
 }
 \description{
 Downloads data from a supported Hugging Face dataset. For
@@ -66,38 +66,43 @@ design.
 Supported columns and their defaults for \code{...}:
 \itemize{
 \item \code{sorting_variable}: \strong{Required.} The firm characteristic used
-to sort stocks into portfolios (e.g., \code{"me"} for market equity,
-\code{"bm"} for book-to-market). No default is applied.
+to sort stocks into portfolios, named like the Open Source Asset
+Pricing signals (e.g., \code{"size"} for market equity, \code{"bm"} for
+book-to-market). See \code{\link[=download_factor_library_grid]{download_factor_library_grid()}} for all
+values. No default is applied.
 \item \code{min_size_quantile} (defaults to \code{0.2}): Fraction of the smallest
 stocks (by market cap) excluded from the portfolio universe. \code{0.2}
 drops the bottom 20\%.
 \item \code{exclude_financials} (defaults to \code{FALSE}): Whether to drop
-financial-sector stocks (SIC 6000-6999) from the universe.
+financial-sector stocks (SIC 6000-6799) from the universe.
 \item \code{exclude_utilities} (default: \code{FALSE}): Whether to drop
 utility-sector stocks (SIC 4900-4999) from the universe.
 \item \code{exclude_negative_earnings} (defaults to \code{FALSE}): Whether to
 drop firms with negative earnings before sorting.
 \item \code{sorting_variable_lag} (defaults to \code{"6m"}): Lag applied to the
-sorting variable before portfolio assignment (e.g., \code{"6m"} = 6-month
-lag).
+sorting variable before portfolio assignment: \code{"1m"} (the timing of
+Open Source Asset Pricing), \code{"3m"}, \code{"6m"}, or \code{"ff"}
+(Fama-French).
 \item \code{rebalancing} (defaults to \code{"monthly"}): How frequently portfolios
 are reformed: \code{"monthly"} or \code{"annual"}.
 \item \code{n_portfolios_main} (defaults to \code{10}): Number of quantile groups
 (e.g., \code{10} for decile portfolios).
 \item \code{sorting_method} (defaults to \code{"univariate"}): Whether portfolios
-are formed on a single sort (\code{"univariate"}) or a sequential double
-sort (\code{"sequential"}).
-\item \code{n_portfolios_secondary} (defaults to \code{NULL}): Number of groups
-for the secondary sort variable.
+are formed on a single sort (\code{"univariate"}) or on a double sort with
+size as the second variable (\code{"bivariate-dependent"} or
+\code{"bivariate-independent"}).
+\item \code{n_portfolios_secondary} (defaults to \code{NULL}): Number of size
+groups for the secondary sort.
 Required when \code{sorting_method} is not \code{"univariate"}.
 \item \code{breakpoints_exchanges} (defaults to: \code{"NYSE"}): Exchange(s) used
 to compute breakpoints. \code{"NYSE"} uses only NYSE-listed stocks to
 define quantile cutoffs (the conventional Fama-French approach).
-\item \code{breakpoints_min_size_threshold} (defaults to \code{NULL}): Minimum
-market-cap threshold (in USD) applied when computing breakpoints.
-\code{NULL} means no minimum-size screen is applied.
+\item \code{breakpoints_min_size_threshold} (defaults to \code{NA}): Minimum
+size quantile of the stocks that set the main breakpoints (e.g.,
+\code{0.2}). \code{NA} means no minimum-size screen is applied.
 \item \code{weighting_scheme} (defaults to \code{"VW"}): Return weighting within
-portfolios: \code{"VW"} for value-weighted or \code{"EW"} for equal-weighted.
+portfolios: \code{"VW"} for value-weighted, \code{"EW"} for equal-weighted, or
+\code{"capped VW"} for value-weighted with capped weights.
 }
 }
 \examples{
@@ -107,15 +112,15 @@ portfolios: \code{"VW"} for value-weighted or \code{"EW"} for equal-weighted.
   )
   download_data_huggingface(
     "factor_library",
-    sorting_variable = "52w",
+    sorting_variable = "high52",
     rebalancing = "annual"
   )
   download_data_huggingface(
-    "factor_library", sorting_variable = "ag", fill_all = TRUE
+    "factor_library", sorting_variable = "assetgrowth", fill_all = TRUE
   )
   download_data_huggingface(
     "factor_library",
-    sorting_variable = "me",
+    sorting_variable = "size",
     start_date = "2000-01-01",
     end_date = "2020-12-31"
   )
@@ -123,20 +128,21 @@ portfolios: \code{"VW"} for value-weighted or \code{"EW"} for equal-weighted.
 }
 }
 \seealso{
-Other download functions: 
-\code{\link{download_data}()},
-\code{\link{download_data_constituents}()},
-\code{\link{download_data_factors_ff}()},
-\code{\link{download_data_factors_q}()},
-\code{\link{download_data_fred}()},
-\code{\link{download_data_jkp}()},
-\code{\link{download_data_macro_predictors}()},
-\code{\link{download_data_osap}()},
-\code{\link{download_data_pastor_stambaugh}()},
-\code{\link{download_data_risk_free}()},
-\code{\link{download_data_stambaugh_yuan}()},
-\code{\link{download_data_stock_prices}()},
-\code{\link{download_factor_library_grid}()},
-\code{\link{download_factor_library_ids}()}
+Other download functions:
+\code{\link[=download_data]{download_data()}},
+\code{\link[=download_data_constituents]{download_data_constituents()}},
+\code{\link[=download_data_factors_ff]{download_data_factors_ff()}},
+\code{\link[=download_data_factors_q]{download_data_factors_q()}},
+\code{\link[=download_data_fred]{download_data_fred()}},
+\code{\link[=download_data_fred_md]{download_data_fred_md()}},
+\code{\link[=download_data_jkp]{download_data_jkp()}},
+\code{\link[=download_data_macro_predictors]{download_data_macro_predictors()}},
+\code{\link[=download_data_osap]{download_data_osap()}},
+\code{\link[=download_data_pastor_stambaugh]{download_data_pastor_stambaugh()}},
+\code{\link[=download_data_risk_free]{download_data_risk_free()}},
+\code{\link[=download_data_stambaugh_yuan]{download_data_stambaugh_yuan()}},
+\code{\link[=download_data_stock_prices]{download_data_stock_prices()}},
+\code{\link[=download_factor_library_grid]{download_factor_library_grid()}},
+\code{\link[=download_factor_library_ids]{download_factor_library_ids()}}
 }
 \concept{download functions}

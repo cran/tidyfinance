@@ -71,16 +71,16 @@ download_data(
 #> # A tibble: 5,284 × 7
 #>    date       mkt_excess     smb     hml     rmw     cma risk_free
 #>    <date>          <dbl>   <dbl>   <dbl>   <dbl>   <dbl>     <dbl>
-#>  1 2000-01-03    -0.0071 -0.0009 -0.0131 -0.0148 -0.007     0.0002
+#>  1 2000-01-03    -0.0071 -0.0009 -0.0131 -0.0146 -0.0071    0.0002
 #>  2 2000-01-04    -0.0406  0.0034  0.0207  0.0053  0.0136    0.0002
-#>  3 2000-01-05    -0.0009  0.0036 -0.0005  0.0045  0.0115    0.0002
-#>  4 2000-01-06    -0.0074 -0.0004  0.0124  0.0064  0.0121    0.0002
-#>  5 2000-01-07     0.0321 -0.0089 -0.0157 -0.0083 -0.01      0.0002
+#>  3 2000-01-05    -0.0009  0.0035 -0.0005  0.0044  0.0114    0.0002
+#>  4 2000-01-06    -0.0074 -0.0003  0.0124  0.0064  0.0122    0.0002
+#>  5 2000-01-07     0.0321 -0.0089 -0.0157 -0.0083 -0.0099    0.0002
 #>  6 2000-01-10     0.0175  0.0043 -0.0135 -0.022  -0.0024    0.0002
-#>  7 2000-01-11    -0.0171  0.0033  0.0091  0.009   0.012     0.0002
-#>  8 2000-01-12    -0.0069 -0.0022  0.0074  0.0042  0.0085    0.0002
-#>  9 2000-01-13     0.0159  0.0047 -0.0084 -0.0172 -0.0103    0.0002
-#> 10 2000-01-14     0.0114  0.0022 -0.0048 -0.0034 -0.006     0.0002
+#>  7 2000-01-11    -0.0171  0.0034  0.0092  0.009   0.012     0.0002
+#>  8 2000-01-12    -0.0069 -0.0022  0.0074  0.0041  0.0085    0.0002
+#>  9 2000-01-13     0.0159  0.0048 -0.0084 -0.0172 -0.0102    0.0002
+#> 10 2000-01-14     0.0114  0.0022 -0.0048 -0.0035 -0.0059    0.0002
 #> # ℹ 5,274 more rows
 ```
 
@@ -236,7 +236,8 @@ Use `list_supported_jkp_factors()` to see the available regions, or
 region.
 
 To download the liquidity factors of Pastor and Stambaugh (2003) from
-Lubos Pastor’s data library:
+[Robert Stambaugh’s data
+library](https://fnce.wharton.upenn.edu/profile/stambaug/#misc):
 
 ``` r
 download_data(
@@ -263,9 +264,9 @@ download_data(
 
 To download the mispricing factors of Stambaugh and Yuan (2017) from
 [Robert Stambaugh’s data
-library](https://finance.wharton.upenn.edu/~stambaug/), optionally
-selecting `"monthly"` (the default) or `"daily"` data. Note that the
-source files currently end in December 2016:
+library](https://fnce.wharton.upenn.edu/profile/stambaug/#misc),
+optionally selecting `"monthly"` (the default) or `"daily"` data. Note
+that the source files currently end in December 2016:
 
 ``` r
 download_data(
@@ -321,6 +322,40 @@ download_data(
 #> 16 2020-12-01   260. CPIAUCNS
 ```
 
+To download the FRED-MD / FRED-QD (McCracken-Ng) macroeconomic
+databases, a curated, balanced panel of monthly or quarterly macro
+series with McCracken-Ng stationarity transform codes. Set
+`transform = TRUE` to apply the transforms, and `vintage` to a
+`"YYYY-MM"` label or `"all"` to access historical (real-time) releases:
+
+``` r
+download_data(
+  domain = "FRED",
+  dataset = "FRED-MD",
+  transform = TRUE
+)
+#> # A tibble: 801 × 127
+#>    date             RPI   W875RX1 DPCERA3M086SBEA  CMRMTSPLx   RETAILx   INDPRO
+#>    <date>         <dbl>     <dbl>           <dbl>      <dbl>     <dbl>    <dbl>
+#>  1 1959-01-01 NA        NA               NA       NA         NA        NA      
+#>  2 1959-02-01  0.00388   0.00362          0.0103   0.00734    0.00731   0.0194 
+#>  3 1959-03-01  0.00646   0.00732          0.00940 -0.00337    0.00832   0.0143 
+#>  4 1959-04-01  0.00651   0.00703         -0.00362  0.0199     0.000616  0.0211 
+#>  5 1959-05-01  0.00580   0.00662          0.0120   0.00684    0.00780   0.0150 
+#>  6 1959-06-01  0.00307   0.00301          0.00364 -0.0000968  0.00906   0.00114
+#>  7 1959-07-01 -0.000580 -0.000762        -0.00339  0.0122    -0.000330 -0.0242 
+#>  8 1959-08-01 -0.00565  -0.00575          0.00600 -0.0525     0.00636  -0.0345 
+#>  9 1959-09-01  0.000763  0                0.0100   0.0147    -0.0132   -0.00121
+#> 10 1959-10-01  0.00127   0.00117         -0.00683  0.00162    0.00729  -0.00729
+#> # ℹ 791 more rows
+#> # ℹ 120 more variables: IPFPNSS <dbl>, IPFINAL <dbl>, IPCONGD <dbl>,
+#> #   IPDCONGD <dbl>, IPNCONGD <dbl>, IPBUSEQ <dbl>, IPMAT <dbl>, IPDMAT <dbl>,
+#> #   IPNMAT <dbl>, IPMANSICS <dbl>, IPB51222S <dbl>, IPFUELS <dbl>,
+#> #   CUMFNS <dbl>, HWI <dbl>, HWIURATIO <dbl>, CLF16OV <dbl>, CE16OV <dbl>,
+#> #   UNRATE <dbl>, UEMPMEAN <dbl>, UEMPLT5 <dbl>, UEMP5TO14 <dbl>,
+#> #   UEMP15OV <dbl>, UEMP15T26 <dbl>, UEMP27OV <dbl>, CLAIMSx <dbl>, …
+```
+
 To download stock prices from Yahoo Finance:
 
 ``` r
@@ -330,20 +365,20 @@ download_data(
   start_date = "2020-01-01",
   end_date = "2020-12-31"
 )
-#> # A tibble: 504 × 8
+#> # A tibble: 506 × 8
 #>    symbol date          volume  open   low  high close adjusted_close
 #>    <chr>  <date>         <dbl> <dbl> <dbl> <dbl> <dbl>          <dbl>
 #>  1 AAPL   2020-01-02 135480400  74.1  73.8  75.2  75.1           72.3
 #>  2 AAPL   2020-01-03 146322800  74.3  74.1  75.1  74.4           71.6
-#>  3 AAPL   2020-01-06 118387200  73.4  73.2  75.0  74.9           72.2
-#>  4 AAPL   2020-01-07 108872000  75.0  74.4  75.2  74.6           71.9
+#>  3 AAPL   2020-01-06 118387200  73.4  73.2  75.0  74.9           72.1
+#>  4 AAPL   2020-01-07 108872000  75.0  74.4  75.2  74.6           71.8
 #>  5 AAPL   2020-01-08 132079200  74.3  74.3  76.1  75.8           73.0
-#>  6 AAPL   2020-01-09 170108400  76.8  76.6  77.6  77.4           74.6
+#>  6 AAPL   2020-01-09 170108400  76.8  76.6  77.6  77.4           74.5
 #>  7 AAPL   2020-01-10 140644800  77.7  77.1  78.2  77.6           74.7
 #>  8 AAPL   2020-01-13 121532000  77.9  77.8  79.3  79.2           76.3
-#>  9 AAPL   2020-01-14 161954400  79.2  78.0  79.4  78.2           75.3
-#> 10 AAPL   2020-01-15 121923600  78.0  77.4  78.9  77.8           75.0
-#> # ℹ 494 more rows
+#>  9 AAPL   2020-01-14 161954400  79.2  78.0  79.4  78.2           75.2
+#> 10 AAPL   2020-01-15 121923600  78.0  77.4  78.9  77.8           74.9
+#> # ℹ 496 more rows
 ```
 
 You can also download high-frequency data for the S&P 500 that we host
@@ -417,7 +452,7 @@ download_data(
   start_date = "2020-01-01",
   end_date = "2020-12-31"
 )
-#> # A tibble: 11,990 × 25
+#> # A tibble: 11,992 × 25
 #>    gvkey  date       datadate        seq     ceq      at      lt  txditc    txdb
 #>    <chr>  <date>     <date>        <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
 #>  1 001004 2020-05-01 2020-05-31   903.    9.03e2 2.08e+3 1.18e+3 0       0      
@@ -430,7 +465,7 @@ download_data(
 #>  8 001078 2020-12-01 2020-12-31 32784     3.28e4 7.25e+4 3.95e+4 1.41e+3 1.41e+3
 #>  9 001084 2020-12-01 2020-12-31    -2.67 -2.67e0 6.92e-1 3.36e+0 0       0      
 #> 10 001096 2020-12-01 2020-12-31  3372.    3.37e3 1.11e+4 6.69e+3 6.48e+2 6.48e+2
-#> # ℹ 11,980 more rows
+#> # ℹ 11,982 more rows
 #> # ℹ 16 more variables: itcb <dbl>, pstkrv <dbl>, pstkl <dbl>, pstk <dbl>,
 #> #   capx <dbl>, oancf <dbl>, sale <dbl>, cogs <dbl>, xint <dbl>, xsga <dbl>,
 #> #   ib <dbl>, curcd <chr>, be <dbl>, op <dbl>, at_lag <dbl>, inv <dbl>
@@ -450,7 +485,7 @@ download_data(
 #>  2  10015 001001 1983-09-20 1986-07-31
 #>  3  10023 001002 1972-12-14 1973-06-05
 #>  4  10031 001003 1983-12-07 1989-08-16
-#>  5  54594 001004 1972-04-24 2026-07-02
+#>  5  54594 001004 1972-04-24 2026-10-05
 #>  6  61903 001005 1973-01-31 1983-01-31
 #>  7  10058 001007 1973-10-01 1979-01-30
 #>  8  10058 001007 1979-01-31 1984-09-28
@@ -496,26 +531,27 @@ Face:
 download_data(
   domain = "Tidy Finance",
   dataset = "factor_library",
-  sorting_variable = "ag"
+  sorting_variable = "assetgrowth"
 )
 #> No `start_date` or `end_date` provided. Returning the full data set.
-#> # A data frame: 779 × 17
-#>        id date       ret_type   ret sorting_variable min_size_quantile
-#>     <int> <date>     <chr>    <dbl> <chr>                        <dbl>
-#>  1 297554 1960-02-01 vw           0 ag                             0.2
-#>  2 297554 1960-03-01 vw           0 ag                             0.2
-#>  3 297554 1960-04-01 vw           0 ag                             0.2
-#>  4 297554 1960-05-01 vw           0 ag                             0.2
-#>  5 297554 1960-06-01 vw           0 ag                             0.2
-#>  6 297554 1960-07-01 vw           0 ag                             0.2
-#>  7 297554 1960-08-01 vw           0 ag                             0.2
-#>  8 297554 1960-09-01 vw           0 ag                             0.2
-#>  9 297554 1960-10-01 vw           0 ag                             0.2
-#> 10 297554 1960-11-01 vw           0 ag                             0.2
+#> # A data frame: 779 × 19
+#>        id date            ret sorting_variable min_size_quantile min_stock_price
+#>     <int> <date>        <dbl> <chr>                        <dbl>           <dbl>
+#>  1 2.12e6 1960-02-01 -0.0272  assetgrowth                    0.2              NA
+#>  2 2.12e6 1960-03-01 -0.0590  assetgrowth                    0.2              NA
+#>  3 2.12e6 1960-04-01 -0.0156  assetgrowth                    0.2              NA
+#>  4 2.12e6 1960-05-01 -0.0751  assetgrowth                    0.2              NA
+#>  5 2.12e6 1960-06-01  0.00232 assetgrowth                    0.2              NA
+#>  6 2.12e6 1960-07-01  0.0306  assetgrowth                    0.2              NA
+#>  7 2.12e6 1960-08-01 -0.0193  assetgrowth                    0.2              NA
+#>  8 2.12e6 1960-09-01  0.0347  assetgrowth                    0.2              NA
+#>  9 2.12e6 1960-10-01  0.0294  assetgrowth                    0.2              NA
+#> 10 2.12e6 1960-11-01 -0.0370  assetgrowth                    0.2              NA
 #> # ℹ 769 more rows
-#> # ℹ 11 more variables: exclude_financials <lgl>, exclude_utilities <lgl>,
+#> # ℹ 13 more variables: min_listing_age <int>, exclude_financials <lgl>,
+#> #   exclude_utilities <lgl>, exclude_negative_book_equity <lgl>,
 #> #   exclude_negative_earnings <lgl>, sorting_variable_lag <chr>,
-#> #   rebalancing <chr>, n_portfolios_main <chr>, sorting_method <chr>,
+#> #   rebalancing <chr>, n_portfolios_main <dbl>, sorting_method <chr>,
 #> #   breakpoints_min_size_threshold <dbl>, n_portfolios_secondary <dbl>,
 #> #   breakpoints_exchanges <chr>, weighting_scheme <chr>
 ```
